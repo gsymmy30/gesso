@@ -101,7 +101,12 @@ async function loadFont(): Promise<ArrayBuffer | null> {
       "SpaceGrotesk-Bold.ttf"
     );
     const buffer = await readFile(fontPath);
-    return buffer.buffer as ArrayBuffer;
+    // Buffer.buffer returns the underlying pool ArrayBuffer, not the content.
+    // Must slice to get the correct range.
+    return buffer.buffer.slice(
+      buffer.byteOffset,
+      buffer.byteOffset + buffer.byteLength
+    );
   } catch {
     // No bundled font — satori will use system fonts
     return null;

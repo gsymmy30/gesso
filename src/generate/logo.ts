@@ -15,7 +15,13 @@ export async function generateLogo(opts: LogoOptions): Promise<string> {
   try {
     const fontPath = opts.fontPath ?? getBundledFontPath();
     const fontBuffer = await readFile(fontPath);
-    const font = opentype.parse(fontBuffer.buffer);
+    // Buffer.buffer returns the underlying pool ArrayBuffer, not the content.
+    // Must slice to get the correct range.
+    const ab = fontBuffer.buffer.slice(
+      fontBuffer.byteOffset,
+      fontBuffer.byteOffset + fontBuffer.byteLength
+    );
+    const font = opentype.parse(ab);
     return generateSvgWithOutlines(font, productName, primaryColor);
   } catch {
     return generateSvgFallback(productName, primaryColor);
