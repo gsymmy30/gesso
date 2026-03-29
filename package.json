@@ -12,7 +12,7 @@
     "src/fonts"
   ],
   "scripts": {
-    "build": "tsup src/cli.ts --format esm --out-dir dist --banner.js '#!/usr/bin/env node'",
+    "build": "tsup",
     "dev": "tsx src/cli.ts",
     "test": "vitest run",
     "test:watch": "vitest",
