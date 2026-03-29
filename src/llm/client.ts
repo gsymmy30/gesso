@@ -152,90 +152,10 @@ async function callOpenAI<T>(
   return JSON.parse(content);
 }
 
-// Simple Zod to JSON Schema converter for the subset we use
+// Use Zod v4's built-in toJSONSchema(), stripping the $schema key
+// that LLM APIs don't accept
 function zodToJsonSchema(schema: z.ZodType): Record<string, unknown> {
-  return convertZod(schema);
-}
-
-function convertZod(schema: z.ZodType): Record<string, unknown> {
-  const def = (schema as any)._def;
-
-  if (!def) return { type: "object" };
-
-  const typeName = def.typeName;
-
-  switch (typeName) {
-    case "ZodString":
-      return applyStringConstraints(def, { type: "string" });
-    case "ZodNumber":
-      return applyNumberConstraints(def, { type: "number" });
-    case "ZodBoolean":
-      return { type: "boolean" };
-    case "ZodLiteral":
-      return { type: typeof def.value, const: def.value };
-    case "ZodEnum":
-      return { type: "string", enum: def.values };
-    case "ZodArray": {
-      const result: Record<string, unknown> = {
-        type: "array",
-        items: convertZod(def.type),
-      };
-      if (def.minLength?.value != null) result.minItems = def.minLength.value;
-      if (def.maxLength?.value != null) result.maxItems = def.maxLength.value;
-      return result;
-    }
-    case "ZodObject": {
-      const shape = def.shape();
-      const properties: Record<string, unknown> = {};
-      const required: string[] = [];
-      for (const [key, value] of Object.entries(shape)) {
-        properties[key] = convertZod(value as z.ZodType);
-        const innerDef = (value as any)?._def;
-        if (innerDef?.typeName !== "ZodOptional") {
-          required.push(key);
-        }
-      }
-      return {
-        type: "object",
-        properties,
-        required,
-        additionalProperties: false,
-      };
-    }
-    case "ZodOptional":
-      return convertZod(def.innerType);
-    case "ZodRecord":
-      return {
-        type: "object",
-        additionalProperties: convertZod(def.valueType),
-      };
-    default:
-      return { type: "string" };
-  }
-}
-
-function applyStringConstraints(
-  def: any,
-  base: Record<string, unknown>
-): Record<string, unknown> {
-  if (def.checks) {
-    for (const check of def.checks) {
-      if (check.kind === "max") base.maxLength = check.value;
-      if (check.kind === "min") base.minLength = check.value;
-    }
-  }
-  return base;
-}
-
-function applyNumberConstraints(
-  def: any,
-  base: Record<string, unknown>
-): Record<string, unknown> {
-  if (def.checks) {
-    for (const check of def.checks) {
-      if (check.kind === "min") base.minimum = check.value;
-      if (check.kind === "max") base.maximum = check.value;
-    }
-  }
-  return base;
+  const jsonSchema = (schema as any).toJSONSchema();
+  delete jsonSchema.$schema;
+  return jsonSchema;
 }
