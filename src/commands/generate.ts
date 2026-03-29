@@ -9,7 +9,7 @@ import { generateCopy } from "../generate/copy.js";
 import { generateVisual } from "../generate/visual.js";
 import { generateSEO } from "../generate/seo.js";
 import { generateAgentInstructions } from "../generate/agent-instructions.js";
-import { generateLogo } from "../generate/logo.js";
+import { generateLogo, type LogoResult } from "../generate/logo.js";
 import { generateOgImage } from "../generate/og-image.js";
 import { generateReadme } from "../generate/readme.js";
 import { buildBrandJson, writeBrandJson } from "../output/brand-json.js";
@@ -290,7 +290,7 @@ export async function runGenerate(opts: GenerateOptions) {
   }
 
   // Phase 5: Logo, OG image, README (parallel, need visual + copy)
-  let logoSvg: string | undefined;
+  let logoResult: LogoResult | undefined;
   let ogImageBuf: Buffer | undefined;
   let readmeContent: string | undefined;
 
@@ -330,7 +330,7 @@ export async function runGenerate(opts: GenerateOptions) {
         visual: confirmedVisual,
       });
       progress.update("Logo", "done", (Date.now() - t) / 1000);
-      logoSvg = result;
+      logoResult = result;
     }),
     limit(async () => {
       progress.update("OG Image", "running");
@@ -437,7 +437,7 @@ export async function runGenerate(opts: GenerateOptions) {
   // ── Stage 6: Write ─────────────────────────────────────────
   if (opts.yes) {
     // Auto-accept all
-    await writeAllFiles(root, brandJson, agentInstructions, logoSvg, ogImageBuf, repo.existingDescription, readmeContent);
+    await writeAllFiles(root, brandJson, agentInstructions, logoResult, ogImageBuf, repo.existingDescription, readmeContent);
     printSuccess("All files written.");
   } else {
     const { accepted, skipped } = await reviewFiles(diffs);
@@ -466,7 +466,7 @@ export async function runGenerate(opts: GenerateOptions) {
 
     // Always write assets if any file was accepted
     if (accepted.length > 0) {
-      const assetPaths = await writeAssets(root, brandJson, logoSvg, ogImageBuf);
+      const assetPaths = await writeAssets(root, brandJson, logoResult, ogImageBuf);
       printFileList(
         assetPaths.map((p) => ({
           name: p.replace(root + "/", ""),
@@ -489,7 +489,7 @@ async function writeAllFiles(
   root: string,
   brandJson: any,
   agentInstructions: AgentInstructions,
-  logoSvg?: string,
+  logoResult?: LogoResult,
   ogImageBuf?: Buffer,
   existingDescription?: string | null,
   readmeContent?: string
@@ -507,7 +507,7 @@ async function writeAllFiles(
     const { join } = await import("node:path");
     await writeFile(join(root, "README.md"), readmeContent, "utf-8");
   }
-  await writeAssets(root, brandJson, logoSvg, ogImageBuf);
+  await writeAssets(root, brandJson, logoResult, ogImageBuf);
 }
 
 async function collectBrief(): Promise<{
@@ -552,7 +552,8 @@ function detectStack(repo: RepoInfo): string {
 function describeAsset(path: string): string {
   if (path.endsWith("brand-tokens.css")) return "CSS custom properties";
   if (path.endsWith("tailwind-brand.js")) return "Tailwind config";
-  if (path.endsWith("logo.svg")) return "SVG wordmark";
+  if (path.endsWith("logo-light.svg")) return "Logo (light mode)";
+  if (path.endsWith("logo-dark.svg")) return "Logo (dark mode)";
   if (path.endsWith("og-image.png")) return "OG image (1200x630)";
   return "";
 }

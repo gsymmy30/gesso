@@ -171,6 +171,106 @@ async function callOpenAI<T>(
   return JSON.parse(content);
 }
 
+export async function generateText(opts: {
+  system: string;
+  prompt: string;
+  temperature?: number;
+  maxTokens?: number;
+  timeoutMs?: number;
+}): Promise<string> {
+  if (!config) throw new Error("LLM not initialized. Call initLLM() first.");
+
+  const timeout = opts.timeoutMs ?? 30_000;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    if (config.provider === "anthropic") {
+      const response = await config.anthropic!.messages.create(
+        {
+          model: "claude-sonnet-4-20250514",
+          max_tokens: opts.maxTokens ?? 4096,
+          temperature: opts.temperature ?? 0,
+          system: opts.system,
+          messages: [{ role: "user", content: opts.prompt }],
+        },
+        { signal: controller.signal }
+      );
+      const textBlock = response.content.find((b) => b.type === "text");
+      if (!textBlock || textBlock.type !== "text") {
+        throw new Error("No text block in response");
+      }
+      return textBlock.text;
+    } else {
+      const response = await config.openai!.chat.completions.create(
+        {
+          model: "gpt-4o",
+          temperature: opts.temperature ?? 0,
+          max_tokens: opts.maxTokens ?? 4096,
+          messages: [
+            { role: "system", content: opts.system },
+            { role: "user", content: opts.prompt },
+          ],
+        },
+        { signal: controller.signal }
+      );
+      return response.choices[0]?.message?.content ?? "";
+    }
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export async function generateChat(opts: {
+  system: string;
+  messages: { role: "user" | "assistant"; content: string }[];
+  temperature?: number;
+  maxTokens?: number;
+  timeoutMs?: number;
+}): Promise<string> {
+  if (!config) throw new Error("LLM not initialized. Call initLLM() first.");
+
+  const timeout = opts.timeoutMs ?? 30_000;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    if (config.provider === "anthropic") {
+      const response = await config.anthropic!.messages.create(
+        {
+          model: "claude-sonnet-4-20250514",
+          max_tokens: opts.maxTokens ?? 4096,
+          temperature: opts.temperature ?? 0,
+          system: opts.system,
+          messages: opts.messages,
+        },
+        { signal: controller.signal }
+      );
+      const textBlock = response.content.find((b) => b.type === "text");
+      if (!textBlock || textBlock.type !== "text") {
+        throw new Error("No text block in response");
+      }
+      return textBlock.text;
+    } else {
+      const response = await config.openai!.chat.completions.create(
+        {
+          model: "gpt-4o",
+          temperature: opts.temperature ?? 0,
+          max_tokens: opts.maxTokens ?? 4096,
+          messages: [
+            { role: "system", content: opts.system },
+            ...opts.messages,
+          ],
+        },
+        { signal: controller.signal }
+      );
+      return response.choices[0]?.message?.content ?? "";
+    }
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // Use Zod v4's built-in toJSONSchema(), stripping the $schema key
 // that LLM APIs don't accept
 function zodToJsonSchema(schema: z.ZodType): Record<string, unknown> {

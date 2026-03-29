@@ -2,35 +2,47 @@
 
 <!-- gesso:brand-start -->
 <!-- gesso:brand-start -->
-## Brand Voice Guidelines
+# Brand Voice Guidelines
 
-**Tone**: Terse, matter-of-fact, code-aware, no-nonsense
+## Voice & Tone
+Write terse, code-aware, matter-of-fact. Assume developer audience who understands tech stacks and file structures.
 
-**Core Principle**: Treat branding as a technical problem to solve, not a creative journey. Speak like a CLI tool that understands codebases.
+**Lead with analysis, not output:**
+- ✅ "Reads package.json, detects FastAPI"
+- ❌ "Creates beautiful logos for your brand"
 
-### Voice Rules
+**Use specific tech examples:**
+- ✅ "FastAPI projects get API-focused treatment"
+- ❌ "Web frameworks get modern designs"
 
-**DO:**
-- Lead with what the tool does, not what it enables
-- Use repo/codebase terminology naturally (package.json, README, src/, etc.)
-- Keep commands and descriptions under 10 words when possible
-- State capabilities as facts, not promises
-- Reference actual file types and tech stack elements
+**Reference actual code structures:**
+- ✅ "Error: No tsconfig.json found in ./src"
+- ✅ "Detected Rust workspace in Cargo.toml"
 
-**DON'T:**
-- Explain why branding matters (users already know)
-- Use marketing speak about "brand identity journey"
-- Apologize for limitations or mention what's coming soon
-- Add unnecessary qualifiers like "simply" or "just"
-- Talk about creativity or inspiration
+## Naming Conventions
+- Commands: `gesso analyze`, `gesso generate`
+- Flags: `--stack`, `--output-dir`, `--format`
+- Error prefixes: "Error:", "Warning:", "Info:"
 
-### Banned Words
-seamless, unlock, reimagine, empower, next-generation, cutting-edge, revolutionize, robust, leverage, supercharge, game-changing, disruptive, effortless, magical, intelligent, smart, automagically
+## Error Messages
+```
+Error: No supported framework detected in ./src
+Warning: Multiple package managers found - using npm
+Info: Detected React + TypeScript stack
+```
 
-### Example Voice
-- "gesso analyze --dry-run shows brand score without generating files"
-- "Generates logo variants based on your package.json and README structure"
-- "Brand assets saved to ./brand/ directory"
+## Banned Words
+seamless, unlock, reimagine, empower, next-generation, cutting-edge, revolutionize, robust, leverage, supercharge, game-changing, disruptive, beautiful, stunning, amazing, incredible, effortless, magical
+
+## Documentation Tone
+- Short sentences. No fluff.
+- Reference real file paths and dependencies
+- Explain what the tool reads, not what it creates
+- Developer-to-developer communication
+<!-- gesso:brand-end -->
+<!-- gesso:brand-end -->
+<!-- gesso:brand-end -->
+<!-- gesso:brand-end -->
 <!-- gesso:brand-end -->
 <!-- gesso:brand-end -->
 <!-- gesso:brand-end -->

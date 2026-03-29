@@ -186,16 +186,6 @@ export const ReadmeSchema = z.object({
 
 export type ReadmeOutput = z.infer<typeof ReadmeSchema>;
 
-// ── Logo Mark ──────────────────────────────────────────────
-
-export const LogoMarkSchema = z.object({
-  concept: z.string(),
-  svgPathData: z.string(),
-  viewBox: z.string(),
-});
-
-export type LogoMark = z.infer<typeof LogoMarkSchema>;
-
 // ── Brand JSON (canonical output) ───────────────────────────
 
 export const BrandJsonSchema = z.object({

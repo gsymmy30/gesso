@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 356 64" width="356" height="64">
+  <!-- Logomark -->
+  <g transform="translate(0, 8)">
+    <svg viewBox="0 0 48 48" width="48" height="48">
+      <g transform="rotate(-8 24 24)">
+  <polygon points="24.0,3.0 42.2,13.5 42.2,34.5 24.0,45.0 5.8,34.5 5.8,13.5" fill="none" stroke="#F56565" stroke-width="3"/>
+  <text x="24" y="24" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700" text-anchor="middle" dominant-baseline="central" fill="#F56565">g</text>
+  <circle cx="46" cy="6" r="3.5" fill="#F56565"/>
+  </g>
+    </svg>
+  </g>
+  <!-- Wordmark -->
+  <g transform="translate(64, 0)">
+    <text x="20" y="46" font-family="system-ui, -apple-system, sans-serif" font-size="42" font-weight="600" letter-spacing="-0.02em" fill="#FFFFFF">gesso-cli</text>
+  </g>
+</svg>

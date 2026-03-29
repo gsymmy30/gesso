@@ -50,7 +50,16 @@ VOICE (follow strictly):
 - Banned words: ${voice.bannedWords.join(", ")}
 
 README STRUCTURE (in this order):
-1. Logo image (if available): \`<p align="center"><img src=".gesso/logo.svg" alt="${analysis.productName}" width="280"></p>\`
+1. Logo image (if available) using dark mode support:
+\`\`\`html
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".gesso/logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset=".gesso/logo-light.svg">
+    <img src=".gesso/logo-light.svg" alt="${analysis.productName}" width="280">
+  </picture>
+</p>
+\`\`\`
 2. Product name as H1 with tagline beneath
 3. Badges row (placeholder format — user fills in URLs later): build status, npm/crate version, license
 4. One-liner description (1 sentence, what it does)

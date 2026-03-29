@@ -6,89 +6,89 @@
 
 | Element | Before | After |
 |---------|--------|-------|
-| Description | Generate a complete brand identity from your codebase. One command, one minute. | Generate brand identity that actually matches your codebase in one command |
+| Description | Generate a complete brand identity from your codebase. One command, one minute. | Generate brand assets that match your actual tech stack - analyzes your codebase first, then creates logos and colors for what you actually built |
 
 ## Positioning
 
-**One-liner:** Generate brand identity that actually matches your codebase in one command
+**One-liner:** Generate brand assets that match your actual tech stack - analyzes your codebase first, then creates logos and colors for what you actually built
 
-**Tagline:** Branding that reads your code first
+**Tagline:** Brand assets that read your code first
 
-**Positioning statement:** For developers building open-source and side projects who end up with generic branding that ignores what they actually built, gesso-cli is a codebase-driven brand generator that creates contextual logos, colors, and copy by analyzing your repository structure and tech stack first, unlike generic logo makers that start with preset templates.
+**Positioning statement:** For developers building open-source projects and side projects who get generic brand assets that ignore their actual tech stack, gesso-cli is a codebase-driven brand generator that creates contextual logos and colors by reading your repository structure and dependencies first, unlike generic brand generators that create identical assets regardless of what you built
 
 **Category:** Codebase-driven brand generator
 
 ### Elevator Pitch
 
-Most developers building side projects end up with generic branding - a random logo that could belong to any app. gesso-cli fixes this by reading your actual codebase first. It analyzes your repository structure, detects your tech stack, and understands whether you're building a CLI tool, web framework, or data pipeline. Then it generates contextual brand assets - logos, colors, and copy - that actually reflect what you built. One command, brand identity that makes sense for your project.
+Your FastAPI project shouldn't get the same branding as a meditation app. gesso-cli reads your package.json, Cargo.toml, and dependencies to understand what you actually built, then generates contextual logos and color palettes using AI. While Canva gives everyone the same templates, we analyze your tech stack first - Rust CLIs get different treatment than React apps because your brand should reflect your code.
 
 ## Voice & Tone
 
-**Personality:** A CLI tool that treats branding as a technical problem to solve, not a creative journey to embark on. Speaks in the same direct, functional language developers use when describing their code. Assumes users understand their own projects and just need the brand assets generated efficiently.
+**Personality:** A pragmatic CLI tool that treats branding as a technical problem to solve, not an artistic endeavor. Speaks developer-to-developer with the assumption that you understand code structure and dependency management. Focuses on the technical approach (reading codebases) rather than the creative output (pretty logos). Has the dry confidence of a tool that actually works as advertised.
 
-**Tone words:** terse, matter-of-fact, code-aware, no-nonsense
+**Tone words:** terse, code-aware, matter-of-fact, pragmatic, dry
 
 ### Do
 
-- Lead with what the tool does, not what it enables
-- Use repo/codebase terminology naturally
-- Keep commands and descriptions under 10 words when possible
-- State capabilities as facts, not promises
-- Reference actual file types and tech stack elements
+- Lead with what the tool reads from code, not what it outputs
+- Use specific tech stack examples (FastAPI, Rust, React) over generic terms
+- Write like you're explaining to another developer who gets it
+- Keep sentences short and direct - no fluff
+- Reference actual file structures and dependencies when relevant
 
 ### Don't
 
-- Explain why branding matters (they already know)
-- Use marketing speak about 'brand identity journey'
-- Apologize for limitations or mention what's coming soon
-- Add unnecessary qualifiers like 'simply' or 'just'
-- Talk about creativity or inspiration
+- Use marketing speak about 'beautiful brands' or 'stunning visuals'
+- Explain why branding matters - assume developers already know
+- Add unnecessary qualifiers like 'simply' or 'easily'
+- Use generic examples - always be specific to real tech stacks
+- Write long explanatory paragraphs when a short statement works
 
 ### Example Sentences
 
-> gesso analyze --dry-run shows brand score without generating files
+> Reads package.json, generates colors that match your stack
 
-> Generates logo variants based on your package.json and README structure
+> Error: No supported framework detected in ./src
 
-> Brand assets saved to ./brand/ directory
+> FastAPI projects get API-focused logos. Rust CLIs get different treatment.
+
+> gesso analyze --stack to see what we found in your codebase
 
 ### Banned Words
 
-seamless, unlock, reimagine, empower, next-generation, cutting-edge, revolutionize, robust, leverage, supercharge, game-changing, disruptive, effortless, magical, intelligent, smart, automagically
+seamless, unlock, reimagine, empower, next-generation, cutting-edge, revolutionize, robust, leverage, supercharge, game-changing, disruptive, beautiful, stunning, amazing, incredible, effortless, magical
 
 ## Copy
 
-**Hero headline:** Branding that reads your code first
+**Hero headline:** Brand assets that read your code first
 
-**Hero subheadline:** Generate logos, colors, and copy by analyzing your repository structure and tech stack instead of starting with generic templates.
+**Hero subheadline:** Analyzes your repository structure and dependencies to generate contextual logos and colors - FastAPI projects get API-focused branding, Rust CLIs get different treatment than React apps.
 
-**OG description:** CLI tool that generates contextual brand assets by analyzing your codebase structure and tech stack first, not generic templates.
+**OG description:** CLI tool that generates brand assets by analyzing your actual codebase first. Reads package.json, Cargo.toml, and dependencies to create contextual logos.
 
 ### README Intro
 
-# gesso-cli
+gesso-cli generates brand assets by analyzing your actual codebase first. Instead of generic templates that ignore what you built, it reads your repository structure and dependencies to create contextual logos and colors.
 
-Generate complete brand identity from your codebase in one command. gesso-cli analyzes your repository structure, tech stack, and existing documentation to create contextual logos, colors, and copy.
+Most brand generators create identical assets for all projects. Your CLI tool gets the same branding as a meditation app because they don't read your code first. gesso-cli analyzes package.json, Cargo.toml, requirements.txt and other dependency files to understand your tech stack, then generates brand assets that match what you actually built.
 
-Most brand generators start with generic templates. Your CLI tool ends up with the same logo as a meditation app. gesso-cli reads your actual code first - parsing file structures, detecting dependencies, identifying frameworks - then generates brand assets that match what you actually built.
-
-Combines multiple AI models with custom scoring algorithms. Outputs structured brand data you can use across README, website, and social profiles. Single command execution, no generic templates.
+The tool uses Satori for SVG logo generation, supports multiple AI models (Claude, OpenAI), implements custom brand scoring algorithms, and exports structured JSON brand data. FastAPI projects get API-focused branding while Rust CLIs get different treatment than React apps.
 
 ### Launch Tweet
 
-> Built gesso-cli: generates brand assets by reading your actual codebase first. Analyzes repo structure + tech stack, then creates contextual logos/colors/copy. No more generic branding that ignores what you actually built.
+> Built gesso-cli: generates brand assets by reading your actual codebase first. Analyzes package.json/Cargo.toml/requirements.txt, then creates contextual logos with Satori + AI models. Your FastAPI project won't get the same branding as a meditation app.
 
 ### Launch Post
 
-Most brand generators for developers start with generic templates and ask you to pick colors. Your CLI tool ends up with the same logo as a meditation app.
+Most brand generators create identical assets regardless of what you built. Your CLI tool gets the same logo as a meditation app because they start with generic templates that ignore your actual code.
 
-gesso-cli flips this: it reads your codebase first. Analyzes repository structure, detects dependencies, maps your tech stack. Then generates logos, colors, and copy that actually match what you built.
+gesso-cli takes a different approach: it reads your repository first. Analyzes package.json, Cargo.toml, requirements.txt to detect your tech stack and dependencies. Then generates contextual brand assets using Satori for SVG logos and AI models (Claude/OpenAI) with custom scoring algorithms.
 
-The approach combines multiple AI models (Claude, OpenAI) with custom scoring algorithms. It parses file structures, identifies frameworks, reads existing docs. A brand scoring system uses heuristics plus LLM evaluation to ensure specificity.
+FastAPI projects get API-focused branding. Rust CLIs get different treatment than React apps. The tool evaluates repository structure and existing brand signals before generating anything.
 
-Example: analyzing a Rust CLI tool generates different assets than a React component library. The branding reflects actual architecture, not random aesthetic choices.
+Technical approach: Commander.js CLI that parses dependency files, feeds context to AI models, uses Satori for SVG generation, implements custom brand scoring heuristics, exports structured JSON brand data.
 
-Single command execution. Outputs structured brand data you can use across README, website, social profiles. Finally, branding that knows the difference between a web framework and a data pipeline.
+Built this because generic brand generators ignore what you actually ship. If you're building open-source projects or side projects, your branding should reflect your tech stack, not a one-size-fits-all template.
 
 ## Visual Identity
 
@@ -98,7 +98,7 @@ Single command execution. Outputs structured brand data you can use across READM
 |------|-------|
 | primary | `#2D3748` |
 | secondary | `#4A5568` |
-| accent | `#ED8936` |
+| accent | `#F56565` |
 | background | `#FAFAFA` |
 | text | `#1A202C` |
 | muted | `#718096` |
@@ -107,9 +107,9 @@ Single command execution. Outputs structured brand data you can use across READM
 
 ## SEO
 
-**Meta title:** gesso-cli - Codebase-Driven Brand Generator for Developers
+**Meta title:** gesso-cli: AI Brand Generator for Your Tech Stack
 
-**Meta description:** Generate contextual brand identity from your codebase in one command. Analyzes repo structure & tech stack to create matching logos, colors & copy.
+**Meta description:** Generate logos & brand assets that match your actual codebase. Analyzes package.json, dependencies & tech stack. Try the CLI tool for developers today!
 
-**Keywords:** gesso-cli, codebase-driven brand generator, contextual branding for developers, CLI brand identity tool, repository-based logo generator, tech stack brand analysis, open-source project branding, automated brand assets, developer branding tool, TypeScript CLI branding
+**Keywords:** gesso-cli, codebase-driven brand generator, tech stack logo generator, AI-powered brand assets, repository analysis branding, contextual logo generation, brand assets for developers, open-source project branding, CLI brand generator, tech stack detection tool, automated brand creation, developer branding tool
 

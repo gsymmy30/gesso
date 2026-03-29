@@ -13,38 +13,44 @@ See `TODOS.md` for deferred work items.
 
 <!-- gesso:brand-start -->
 <!-- gesso:brand-start -->
-## gesso-cli Brand Guidelines
+# gesso-cli Brand Guidelines
 
-**Product**: CLI tool that generates brand identity matching your codebase in one command
+## Voice & Personality
+You are a pragmatic CLI tool that treats branding as a technical problem. Write like a developer explaining to another developer. Be terse, code-aware, and matter-of-fact.
 
-**Voice**: Terse, matter-of-fact, code-aware. Assume users understand their projects and need efficient brand asset generation.
+**Core principle:** Lead with what you analyze, not what you generate.
 
-### Writing Style
+## Writing Style
+- Keep sentences short and direct
+- Reference specific tech stacks (FastAPI, Rust, React) over generic terms
+- Mention actual file structures and dependencies
+- Write with dry confidence of a tool that works
+- No marketing speak or unnecessary qualifiers
 
-**Commands & Descriptions**: Under 10 words when possible
-**Error Messages**: Direct, actionable, reference actual file paths
-**Documentation**: Lead with functionality, use repo terminology naturally
+**Good examples:**
+- "Reads package.json, generates colors that match your stack"
+- "FastAPI projects get API-focused logos. Rust CLIs get different treatment."
+- "gesso analyze --stack to see what we found in your codebase"
 
-### Language Patterns
+**Avoid:**
+- Explaining why branding matters (developers know)
+- Generic examples (always be specific)
+- Long explanatory paragraphs
+- Words like "simply," "easily," "beautiful," "stunning"
 
-**Good**: 
-- "Analyzes TypeScript interfaces for color palette"
-- "Reads package.json dependencies for tech stack icons"
-- "Outputs SVG logos to ./brand/logos/"
+## Error Messages & CLI Output
+```
+Error: No supported framework detected in ./src
+Warning: Multiple package managers found - using npm
+Info: Detected React + TypeScript stack
+```
 
-**Avoid**:
-- Marketing language about brand journeys
-- Qualifiers like "simply" or "just"
-- Apologizing for limitations
-- Explaining why branding matters
-
-### Naming Conventions
-
-- Use kebab-case for CLI flags: `--dry-run`, `--output-dir`
-- Reference actual file extensions: `.ts`, `.json`, `.md`
-- Use standard directory names: `src/`, `dist/`, `brand/`
-
-**Banned Terms**: seamless, unlock, reimagine, empower, next-generation, cutting-edge, revolutionize, robust, leverage, supercharge, game-changing, disruptive, effortless, magical, intelligent, smart, automagically
+## Banned Words
+seamless, unlock, reimagine, empower, next-generation, cutting-edge, revolutionize, robust, leverage, supercharge, game-changing, disruptive, beautiful, stunning, amazing, incredible, effortless, magical
+<!-- gesso:brand-end -->
+<!-- gesso:brand-end -->
+<!-- gesso:brand-end -->
+<!-- gesso:brand-end -->
 <!-- gesso:brand-end -->
 <!-- gesso:brand-end -->
 <!-- gesso:brand-end -->

@@ -1,11 +1,12 @@
 import { writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import type { Visual, BrandJson } from "../llm/schemas.js";
+import type { LogoResult } from "../generate/logo.js";
 
 export async function writeAssets(
   root: string,
   brand: BrandJson,
-  logo?: string,
+  logo?: LogoResult,
   ogImage?: Buffer
 ): Promise<string[]> {
   const assetsDir = join(root, ".gesso");
@@ -25,11 +26,15 @@ export async function writeAssets(
   await writeFile(twPath, tw, "utf-8");
   written.push(twPath);
 
-  // Logo SVG
+  // Logo SVGs (light + dark variants)
   if (logo) {
-    const logoPath = join(assetsDir, "logo.svg");
-    await writeFile(logoPath, logo, "utf-8");
-    written.push(logoPath);
+    const lightPath = join(assetsDir, "logo-light.svg");
+    await writeFile(lightPath, logo.light, "utf-8");
+    written.push(lightPath);
+
+    const darkPath = join(assetsDir, "logo-dark.svg");
+    await writeFile(darkPath, logo.dark, "utf-8");
+    written.push(darkPath);
   }
 
   // OG image

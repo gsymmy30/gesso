@@ -4,7 +4,7 @@
 export const brandColors = {
   primary: "#2D3748",
   secondary: "#4A5568",
-  accent: "#ED8936",
+  accent: "#F56565",
   background: "#FAFAFA",
   text: "#1A202C",
   muted: "#718096",
