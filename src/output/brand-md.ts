@@ -111,6 +111,6 @@ export async function writeBrandMd(
 ): Promise<string> {
   const content = renderBrandMd(brand);
   const filePath = join(root, "brand.md");
-  await writeFile(filePath, content, "utf-8");
+  await writeFile(filePath, content + "\n", "utf-8");
   return filePath;
 }

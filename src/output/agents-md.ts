@@ -45,7 +45,7 @@ function replaceOrAppend(content: string, wrapped: string): string {
   const startIdx = content.indexOf(START_DELIMITER);
   const endIdx = content.indexOf(END_DELIMITER);
 
-  if (startIdx !== -1 && endIdx !== -1) {
+  if (startIdx !== -1 && endIdx !== -1 && startIdx < endIdx) {
     // Replace existing gesso section
     return (
       content.slice(0, startIdx) +
