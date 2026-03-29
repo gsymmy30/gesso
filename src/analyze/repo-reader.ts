@@ -241,7 +241,7 @@ export async function readRepo(root: string): Promise<RepoInfo> {
       files.push({
         path: relPath,
         content,
-        lines: Math.min(lines.length, MAX_LINES_PER_FILE),
+        lines: content.split("\n").length,
       });
       totalChars += content.length;
     } catch {
