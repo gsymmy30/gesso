@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { ui } from "../ui/colors.js";
 
 export interface FileDiff {
@@ -15,7 +16,7 @@ export async function buildDiffs(
   const diffs: FileDiff[] = [];
 
   for (const file of files) {
-    const fullPath = `${root}/${file.path}`;
+    const fullPath = join(root, file.path);
     const exists = existsSync(fullPath);
 
     if (exists) {
