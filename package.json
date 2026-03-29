@@ -1,0 +1,64 @@
+{
+  "name": "gesso-cli",
+  "version": "0.0.1",
+  "description": "Generate a complete brand identity from your codebase. One command, one minute.",
+  "type": "module",
+  "bin": {
+    "gesso": "./dist/cli.mjs"
+  },
+  "files": [
+    "dist",
+    "src/templates",
+    "src/fonts"
+  ],
+  "scripts": {
+    "build": "tsup src/cli.ts --format esm --out-dir dist --banner.js '#!/usr/bin/env node'",
+    "dev": "tsx src/cli.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:live": "vitest run --config vitest.live.config.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "brand",
+    "branding",
+    "brand-identity",
+    "developer-tools",
+    "cli",
+    "ai",
+    "agents-md",
+    "claude-md",
+    "design-tokens",
+    "logo",
+    "og-image"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gsymmy30/gesso"
+  },
+  "homepage": "https://github.com/gsymmy30/gesso#readme",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.80.0",
+    "@resvg/resvg-js": "^2.6.2",
+    "chalk": "^5.6.2",
+    "commander": "^14.0.3",
+    "openai": "^6.33.0",
+    "opentype.js": "^1.3.4",
+    "p-limit": "^7.3.0",
+    "satori": "^0.26.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "tsup": "^8.5.1",
+    "tsx": "^4.19.0",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
+  }
+}
