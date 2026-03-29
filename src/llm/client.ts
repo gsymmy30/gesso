@@ -50,22 +50,41 @@ export async function generateStructured<T>(opts: {
   temperature?: number;
   maxTokens?: number;
   timeoutMs?: number;
+  maxRetries?: number;
 }): Promise<T> {
   if (!config) throw new Error("LLM not initialized. Call initLLM() first.");
 
-  const timeout = opts.timeoutMs ?? 30_000;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeout);
+  const maxRetries = opts.maxRetries ?? 1;
+  let lastError: Error | null = null;
 
-  try {
-    const raw = config.provider === "anthropic"
-      ? await callAnthropic(opts, controller.signal)
-      : await callOpenAI(opts, controller.signal);
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const timeout = opts.timeoutMs ?? 30_000;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
 
-    return opts.schema.parse(raw);
-  } finally {
-    clearTimeout(timer);
+    try {
+      const isRetry = attempt > 0;
+      const retryPrompt = isRetry && lastError
+        ? `${opts.prompt}\n\nPREVIOUS ATTEMPT FAILED VALIDATION:\n${lastError.message}\n\nFix the issues above and try again.`
+        : opts.prompt;
+
+      const raw = config.provider === "anthropic"
+        ? await callAnthropic({ ...opts, prompt: retryPrompt }, controller.signal)
+        : await callOpenAI({ ...opts, prompt: retryPrompt }, controller.signal);
+
+      return opts.schema.parse(raw);
+    } catch (e) {
+      lastError = e instanceof Error ? e : new Error(String(e));
+      // Don't retry on abort (timeout) or non-validation errors on last attempt
+      if (controller.signal.aborted || attempt === maxRetries) {
+        throw lastError;
+      }
+    } finally {
+      clearTimeout(timer);
+    }
   }
+
+  throw lastError!;
 }
 
 async function callAnthropic<T>(

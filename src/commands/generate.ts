@@ -11,6 +11,7 @@ import { generateSEO } from "../generate/seo.js";
 import { generateAgentInstructions } from "../generate/agent-instructions.js";
 import { generateLogo } from "../generate/logo.js";
 import { generateOgImage } from "../generate/og-image.js";
+import { generateReadme } from "../generate/readme.js";
 import { buildBrandJson, writeBrandJson } from "../output/brand-json.js";
 import { writeBrandMd } from "../output/brand-md.js";
 import { writeAgentsMd, writeClaudeMd } from "../output/agents-md.js";
@@ -98,6 +99,7 @@ export async function runGenerate(opts: GenerateOptions) {
     "Visual Identity",
     "SEO",
     "Agent Instructions",
+    "README",
     "Logo",
     "OG Image",
   ]);
@@ -230,9 +232,18 @@ export async function runGenerate(opts: GenerateOptions) {
     }),
   ]);
 
-  if (phase4[0].status === "rejected") progress.update("Copy", "failed");
-  if (phase4[1].status === "rejected") progress.update("SEO", "failed");
-  if (phase4[2].status === "rejected") progress.update("Agent Instructions", "failed");
+  if (phase4[0].status === "rejected") {
+    progress.update("Copy", "failed");
+    printError(`Copy: ${(phase4[0] as PromiseRejectedResult).reason?.message ?? phase4[0].reason}`);
+  }
+  if (phase4[1].status === "rejected") {
+    progress.update("SEO", "failed");
+    printError(`SEO: ${(phase4[1] as PromiseRejectedResult).reason?.message ?? phase4[1].reason}`);
+  }
+  if (phase4[2].status === "rejected") {
+    progress.update("Agent Instructions", "failed");
+    printError(`Agent Instructions: ${(phase4[2] as PromiseRejectedResult).reason?.message ?? phase4[2].reason}`);
+  }
 
   // Once we have copy, regenerate SEO with full copy context if first attempt used placeholder
   if (copy && seo && phase4[0].status === "fulfilled") {
@@ -243,41 +254,7 @@ export async function runGenerate(opts: GenerateOptions) {
     }
   }
 
-  // Phase 5: Logo + OG image (parallel, need visual)
-  let logoSvg: string | undefined;
-  let ogImageBuf: Buffer | undefined;
-
-  const phase5 = await Promise.allSettled([
-    limit(async () => {
-      progress.update("Logo", "running");
-      const t = Date.now();
-      const result = await generateLogo({
-        productName: analysis.productName,
-        primaryColor: confirmedVisual.palette.primary,
-      });
-      progress.update("Logo", "done", (Date.now() - t) / 1000);
-      logoSvg = result;
-    }),
-    limit(async () => {
-      progress.update("OG Image", "running");
-      const t = Date.now();
-      const result = await generateOgImage({
-        productName: analysis.productName,
-        tagline: positioning.tagline,
-        palette: confirmedVisual.palette,
-      });
-      progress.update("OG Image", "done", (Date.now() - t) / 1000);
-      ogImageBuf = result;
-    }),
-  ]);
-
-  if (phase5[0].status === "rejected") progress.update("Logo", "failed");
-  if (phase5[1].status === "rejected") progress.update("OG Image", "failed");
-
-  progress.stop();
-  console.log();
-
-  // Handle partial failures
+  // Apply fallbacks for failed Phase 4 steps BEFORE Phase 5 needs them
   if (!copy) {
     printError("Copy generation failed. Proceeding with partial results.");
     copy = {
@@ -311,6 +288,95 @@ export async function runGenerate(opts: GenerateOptions) {
       claudeMdSection: "",
     };
   }
+
+  // Phase 5: Logo, OG image, README (parallel, need visual + copy)
+  let logoSvg: string | undefined;
+  let ogImageBuf: Buffer | undefined;
+  let readmeContent: string | undefined;
+
+  // Read existing README for update mode
+  let existingReadme: string | null = null;
+  try {
+    const { readFile } = await import("node:fs/promises");
+    const { join } = await import("node:path");
+    for (const name of ["README.md", "readme.md", "Readme.md"]) {
+      try {
+        existingReadme = await readFile(join(root, name), "utf-8");
+        break;
+      } catch { /* try next */ }
+    }
+  } catch { /* no readme */ }
+
+  // Resolve repo URL for README links
+  let repoUrl: string | null = null;
+  if (opts.repo) {
+    const url = resolveRepoUrl(opts.repo);
+    repoUrl = url?.replace(/\.git$/, "") ?? null;
+  } else {
+    try {
+      const { execFileSync } = await import("node:child_process");
+      const remote = execFileSync("git", ["remote", "get-url", "origin"], { cwd: root, stdio: "pipe" }).toString().trim();
+      repoUrl = remote.replace(/\.git$/, "").replace(/^git@github\.com:/, "https://github.com/");
+    } catch { /* not a git repo or no remote */ }
+  }
+
+  const phase5 = await Promise.allSettled([
+    limit(async () => {
+      progress.update("Logo", "running");
+      const t = Date.now();
+      const result = await generateLogo({
+        analysis,
+        positioning,
+        visual: confirmedVisual,
+      });
+      progress.update("Logo", "done", (Date.now() - t) / 1000);
+      logoSvg = result;
+    }),
+    limit(async () => {
+      progress.update("OG Image", "running");
+      const t = Date.now();
+      const result = await generateOgImage({
+        productName: analysis.productName,
+        tagline: positioning.tagline,
+        palette: confirmedVisual.palette,
+      });
+      progress.update("OG Image", "done", (Date.now() - t) / 1000);
+      ogImageBuf = result;
+    }),
+    limit(async () => {
+      progress.update("README", "running");
+      const t = Date.now();
+      const result = await generateReadme({
+        analysis,
+        positioning,
+        voice: confirmedVoice,
+        copy: copy!,
+        visual: confirmedVisual,
+        seo: seo!,
+        existingReadme,
+        repoUrl,
+        hasLogo: true,
+      });
+      progress.update("README", "done", (Date.now() - t) / 1000);
+      readmeContent = result;
+    }),
+  ]);
+
+  if (phase5[0].status === "rejected") {
+    progress.update("Logo", "failed");
+    printError(`Logo: ${(phase5[0] as PromiseRejectedResult).reason?.message ?? phase5[0].reason}`);
+  }
+  if (phase5[1].status === "rejected") {
+    progress.update("OG Image", "failed");
+    printError(`OG Image: ${(phase5[1] as PromiseRejectedResult).reason?.message ?? phase5[1].reason}`);
+  }
+  if (phase5[2].status === "rejected") {
+    progress.update("README", "failed");
+    printError(`README: ${(phase5[2] as PromiseRejectedResult).reason?.message ?? phase5[2].reason}`);
+  }
+
+  progress.stop();
+  console.log();
 
   // ── Stage 5: Review ────────────────────────────────────────
   const projected = projectScore(scoreItems);
@@ -361,6 +427,9 @@ export async function runGenerate(opts: GenerateOptions) {
   if (agentInstructions.claudeMdSection) {
     filesToWrite.push({ path: "CLAUDE.md", content: agentInstructions.claudeMdSection });
   }
+  if (readmeContent) {
+    filesToWrite.push({ path: "README.md", content: readmeContent });
+  }
 
   const diffs = await buildDiffs(root, filesToWrite);
   printDiffSummary(diffs);
@@ -368,7 +437,7 @@ export async function runGenerate(opts: GenerateOptions) {
   // ── Stage 6: Write ─────────────────────────────────────────
   if (opts.yes) {
     // Auto-accept all
-    await writeAllFiles(root, brandJson, agentInstructions, logoSvg, ogImageBuf, repo.existingDescription);
+    await writeAllFiles(root, brandJson, agentInstructions, logoSvg, ogImageBuf, repo.existingDescription, readmeContent);
     printSuccess("All files written.");
   } else {
     const { accepted, skipped } = await reviewFiles(diffs);
@@ -388,6 +457,10 @@ export async function runGenerate(opts: GenerateOptions) {
         await writeAgentsMd(root, agentInstructions.agentsMdSection);
       } else if (diff.path === "CLAUDE.md" && agentInstructions.claudeMdSection) {
         await writeClaudeMd(root, agentInstructions.claudeMdSection);
+      } else if (diff.path === "README.md" && readmeContent) {
+        const { writeFile } = await import("node:fs/promises");
+        const { join } = await import("node:path");
+        await writeFile(join(root, "README.md"), readmeContent, "utf-8");
       }
     }
 
@@ -418,7 +491,8 @@ async function writeAllFiles(
   agentInstructions: AgentInstructions,
   logoSvg?: string,
   ogImageBuf?: Buffer,
-  existingDescription?: string | null
+  existingDescription?: string | null,
+  readmeContent?: string
 ) {
   await writeBrandJson(root, brandJson);
   await writeBrandMd(root, brandJson, existingDescription);
@@ -427,6 +501,11 @@ async function writeAllFiles(
   }
   if (agentInstructions.claudeMdSection) {
     await writeClaudeMd(root, agentInstructions.claudeMdSection);
+  }
+  if (readmeContent) {
+    const { writeFile } = await import("node:fs/promises");
+    const { join } = await import("node:path");
+    await writeFile(join(root, "README.md"), readmeContent, "utf-8");
   }
   await writeAssets(root, brandJson, logoSvg, ogImageBuf);
 }

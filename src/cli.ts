@@ -1,11 +1,30 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync, existsSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { initLLM } from "./llm/client.js";
 import { printHeader, printError } from "./ui/output.js";
 import { runGenerate } from "./commands/generate.js";
+
+// Auto-load .env from cwd (no dependency needed)
+const envPath = resolve(process.cwd(), ".env");
+if (existsSync(envPath)) {
+  for (const line of readFileSync(envPath, "utf-8").split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq === -1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let val = trimmed.slice(eq + 1).trim();
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+      val = val.slice(1, -1);
+    }
+    if (!process.env[key]) {
+      process.env[key] = val;
+    }
+  }
+}
 
 const pkg = JSON.parse(
   readFileSync(join(new URL(".", import.meta.url).pathname, "..", "package.json"), "utf-8")

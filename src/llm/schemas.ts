@@ -178,6 +178,24 @@ export const AgentInstructionsSchema = z.object({
 
 export type AgentInstructions = z.infer<typeof AgentInstructionsSchema>;
 
+// ── README ─────────────────────────────────────────────────
+
+export const ReadmeSchema = z.object({
+  content: z.string(),
+});
+
+export type ReadmeOutput = z.infer<typeof ReadmeSchema>;
+
+// ── Logo Mark ──────────────────────────────────────────────
+
+export const LogoMarkSchema = z.object({
+  concept: z.string(),
+  svgPathData: z.string(),
+  viewBox: z.string(),
+});
+
+export type LogoMark = z.infer<typeof LogoMarkSchema>;
+
 // ── Brand JSON (canonical output) ───────────────────────────
 
 export const BrandJsonSchema = z.object({

@@ -15,7 +15,10 @@ interface OgImageOptions {
 }
 
 export async function generateOgImage(opts: OgImageOptions): Promise<Buffer> {
-  const fontData = await loadFont();
+  const fonts = await loadFonts();
+  if (fonts.length === 0) {
+    throw new Error("No font files found in assets/. OG image generation requires bundled fonts.");
+  }
 
   const svg = await satori(
     {
@@ -80,9 +83,7 @@ export async function generateOgImage(opts: OgImageOptions): Promise<Buffer> {
     {
       width: 1200,
       height: 630,
-      fonts: fontData
-        ? [{ name: "sans-serif", data: fontData, weight: 700, style: "normal" as const }]
-        : [],
+      fonts,
     }
   );
 
@@ -92,24 +93,29 @@ export async function generateOgImage(opts: OgImageOptions): Promise<Buffer> {
   return Buffer.from(resvg.render().asPng());
 }
 
-async function loadFont(): Promise<ArrayBuffer | null> {
+async function loadFontBuffer(filename: string): Promise<ArrayBuffer | null> {
   try {
     const fontPath = join(
       new URL(".", import.meta.url).pathname,
       "..",
-      "..",
       "assets",
-      "SpaceGrotesk-Bold.ttf"
+      filename
     );
     const buffer = await readFile(fontPath);
-    // Buffer.buffer returns the underlying pool ArrayBuffer, not the content.
-    // Must slice to get the correct range.
     return buffer.buffer.slice(
       buffer.byteOffset,
       buffer.byteOffset + buffer.byteLength
     );
   } catch {
-    // No bundled font — satori will use system fonts
     return null;
   }
+}
+
+async function loadFonts() {
+  const fonts: { name: string; data: ArrayBuffer; weight: 700 | 400; style: "normal" }[] = [];
+  const bold = await loadFontBuffer("SpaceGrotesk-Bold.ttf");
+  if (bold) fonts.push({ name: "sans-serif", data: bold, weight: 700 as const, style: "normal" as const });
+  const regular = await loadFontBuffer("SpaceGrotesk-Regular.ttf");
+  if (regular) fonts.push({ name: "sans-serif", data: regular, weight: 400 as const, style: "normal" as const });
+  return fonts;
 }
