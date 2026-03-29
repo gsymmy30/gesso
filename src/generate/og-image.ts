@@ -42,6 +42,7 @@ export async function generateOgImage(opts: OgImageOptions): Promise<Buffer> {
                 color: opts.palette.primary,
                 marginBottom: "24px",
                 lineHeight: 1.1,
+                letterSpacing: "-0.02em",
               },
               children: opts.productName,
             },

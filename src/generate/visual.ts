@@ -1,18 +1,29 @@
 import { generateStructured } from "../llm/client.js";
 import { VisualSchema, type Visual, type Analysis, type Positioning } from "../llm/schemas.js";
+import type { ExistingVisuals } from "../analyze/repo-reader.js";
 
 export async function generateVisual(
   analysis: Analysis,
-  positioning: Positioning
+  positioning: Positioning,
+  existingVisuals?: ExistingVisuals
 ): Promise<Visual> {
   return generateStructured({
     schema: VisualSchema,
     schemaName: "visual",
     temperature: 0.3,
-    system: `You are a brand designer specializing in developer tools. Generate a visual identity.
+    system: `You are a brand designer specializing in developer tools and SaaS products. Generate a visual identity grounded in real industry patterns.
+
+Research context (analysis of 128 SaaS/tech logos):
+- 93% of tech companies use sans-serif typography
+- 51% use monochrome/black logos. Among colored: blue (18%), orange (10%), green (8%)
+- Tech logos favor minimal color and clean geometry vs consumer brands
+- 42% lowercase wordmarks, 48% title case, only 10% all-caps
+- Two-word names always written as one word (e.g., "NetSpring" not "Net Spring")
+
+Use these patterns as a baseline, not a cage. Break the pattern only when the product's personality genuinely calls for it (e.g., a creative tool might warrant warmer colors or a display font).
 
 Color palette rules:
-- primary: the main brand color, used for links, buttons, headings. Should be distinctive.
+- primary: the main brand color for links, buttons, headings. Should be distinctive but not garish. Consider whether monochrome (black/dark gray) fits the product's seriousness.
 - secondary: complements primary. Used for hover states, secondary actions.
 - accent: a pop color for highlights, badges, success states. High contrast with primary.
 - background: page background. Light mode: near-white. Dark mode: near-black.
@@ -20,7 +31,7 @@ Color palette rules:
 - muted: secondary text, borders. Must be readable but clearly subordinate.
 
 All colors must be hex values (#RRGGBB).
-Font pairing: choose real, freely available Google Fonts. Heading font should match the brand personality. Body font should be highly readable.
+Font pairing: choose real, freely available Google Fonts. 93% of tech products use sans-serif. Pick a geometric or grotesque sans-serif for headings unless the product's personality strongly warrants something else. Body font should be highly readable at small sizes.
 Palette name should be evocative (2-3 words, like "Arctic Depth" or "Sunset Workshop").`,
     prompt: `Generate visual identity for:
 
@@ -29,7 +40,12 @@ Archetype: ${analysis.archetype}
 Category: ${positioning.category}
 Target audience: ${analysis.targetAudience}
 Positioning: ${positioning.positioningStatement}
-Tech stack: ${analysis.techStack.slice(0, 5).join(", ")}`,
+Tech stack: ${analysis.techStack.slice(0, 5).join(", ")}
+${existingVisuals && existingVisuals.detectedColors.length > 0
+  ? `\nExisting brand colors detected in codebase (from ${existingVisuals.colorSource}): ${existingVisuals.detectedColors.join(", ")}
+Build a palette that harmonizes with these existing colors. Use them as a starting point, not a constraint.`
+  : ""}
+${existingVisuals?.hasLogo ? "\nNote: Project already has a logo file. The palette should complement existing brand assets." : ""}`,
     maxTokens: 1024,
   });
 }

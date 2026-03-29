@@ -30,6 +30,33 @@ export const AnalysisSchema = z.object({
   productCategory: z.string(),
   keyFeatures: z.array(z.string()),
   competitorHints: z.array(z.string()),
+
+  // Signal enrichment fields (anti-slop)
+  uniqueApproach: z.string(),
+  architecturePattern: z.enum([
+    "monolith",
+    "microservice",
+    "serverless",
+    "library",
+    "cli",
+    "framework",
+    "plugin",
+    "monorepo",
+  ]),
+  maturityStage: z.enum([
+    "prototype",
+    "alpha",
+    "beta",
+    "stable",
+    "mature",
+  ]),
+  problemStatement: z.string(),
+  competitiveAngle: z.string(),
+  writingStyle: z.object({
+    tone: z.string(),
+    samples: z.array(z.string()).min(1).max(3),
+    formality: z.enum(["casual", "conversational", "technical", "formal"]),
+  }),
 });
 
 export type Analysis = z.infer<typeof AnalysisSchema>;
@@ -64,6 +91,16 @@ export const BrandScoreLLMSchema = z.object({
 
 export type BrandScoreItem = z.infer<typeof BrandScoreItemSchema>;
 export type BrandScoreLLM = z.infer<typeof BrandScoreLLMSchema>;
+
+export const SpecificityScoreSchema = z.object({
+  onlyWeTest: z.number().min(0).max(10),
+  repeatability: z.number().min(0).max(10),
+  categoryGeneric: z.boolean(),
+  evidence: z.string(),
+  reason: z.string(),
+});
+
+export type SpecificityScore = z.infer<typeof SpecificityScoreSchema>;
 
 // ── Generation outputs ──────────────────────────────────────
 

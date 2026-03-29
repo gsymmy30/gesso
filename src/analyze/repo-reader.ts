@@ -1,6 +1,6 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import { join, relative, extname, basename } from "node:path";
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 
 const SKIP_DIRS = new Set([
@@ -99,6 +99,20 @@ export interface RepoFile {
   lines: number;
 }
 
+export interface MaturitySignals {
+  version: string;
+  hasCI: boolean;
+  hasTests: boolean;
+  hasContributing: boolean;
+}
+
+export interface ExistingVisuals {
+  detectedColors: string[];
+  hasLogo: boolean;
+  hasFavicon: boolean;
+  colorSource: string | null;
+}
+
 export interface RepoInfo {
   root: string;
   files: RepoFile[];
@@ -106,6 +120,10 @@ export interface RepoInfo {
   manifest: string | null;
   hasReadme: boolean;
   isCloned: boolean;
+  maturitySignals: MaturitySignals;
+  existingVisuals: ExistingVisuals;
+  candidateVoiceSamples: string[];
+  existingDescription: string | null;
 }
 
 function isGessoIgnored(filePath: string, ignorePatterns: string[]): boolean {
@@ -173,8 +191,9 @@ export async function cloneRepo(url: string): Promise<string> {
     `gesso-clone-${Date.now()}`
   );
   try {
-    execSync(
-      `git clone --depth 1 --single-branch ${url} ${tmpDir}`,
+    execFileSync(
+      "git",
+      ["clone", "--depth", "1", "--single-branch", url, tmpDir],
       { stdio: "pipe", timeout: 60_000 }
     );
   } catch (e: any) {
@@ -197,6 +216,163 @@ export function resolveRepoUrl(input: string): string | null {
   if (input.startsWith("https://") || input.startsWith("git@")) {
     return input.endsWith(".git") ? input : input + ".git";
   }
+  return null;
+}
+
+// ── Signal extraction helpers ──────────────────────────────
+
+const DEFAULT_COLORS = new Set([
+  "#000000", "#ffffff", "#f5f5f5", "#333333", "#666666",
+  "#999999", "#cccccc", "#111111", "#222222", "#eeeeee",
+]);
+
+const HEX_REGEX = /#([0-9a-fA-F]{6})\b/g;
+
+export async function extractVisualDNA(root: string, allPaths: string[]): Promise<ExistingVisuals> {
+  const colorFiles = allPaths.filter((p) => {
+    const name = basename(p);
+    return (
+      name.startsWith("tailwind.config") ||
+      p.endsWith(".css") ||
+      name.startsWith("theme.") ||
+      name.startsWith("tokens.")
+    );
+  });
+
+  const colorCounts = new Map<string, number>();
+  let colorSource: string | null = null;
+
+  for (const relPath of colorFiles.slice(0, 10)) {
+    try {
+      const content = await readFile(join(root, relPath), "utf-8");
+      let match: RegExpExecArray | null;
+      HEX_REGEX.lastIndex = 0;
+      while ((match = HEX_REGEX.exec(content)) !== null) {
+        const hex = `#${match[1].toLowerCase()}`;
+        if (!DEFAULT_COLORS.has(hex)) {
+          colorCounts.set(hex, (colorCounts.get(hex) ?? 0) + 1);
+          if (!colorSource) colorSource = relPath;
+        }
+      }
+    } catch {
+      // Skip unreadable files
+    }
+  }
+
+  const detectedColors = [...colorCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([hex]) => hex);
+
+  const hasLogo =
+    existsSync(join(root, "logo.svg")) ||
+    existsSync(join(root, "logo.png")) ||
+    existsSync(join(root, "public/logo.svg")) ||
+    existsSync(join(root, "public/logo.png"));
+
+  const hasFavicon =
+    existsSync(join(root, "favicon.ico")) ||
+    existsSync(join(root, "favicon.svg")) ||
+    existsSync(join(root, "public/favicon.ico")) ||
+    existsSync(join(root, "public/favicon.svg"));
+
+  return { detectedColors, hasLogo, hasFavicon, colorSource };
+}
+
+export function detectMaturitySignals(root: string): MaturitySignals {
+  const hasCI =
+    existsSync(join(root, ".github/workflows")) ||
+    existsSync(join(root, ".gitlab-ci.yml")) ||
+    existsSync(join(root, ".circleci"));
+
+  const hasTests =
+    existsSync(join(root, "test")) ||
+    existsSync(join(root, "tests")) ||
+    existsSync(join(root, "__tests__")) ||
+    existsSync(join(root, "spec"));
+
+  const hasContributing =
+    existsSync(join(root, "CONTRIBUTING.md")) ||
+    existsSync(join(root, "contributing.md"));
+
+  let version = "0.0.0";
+  try {
+    const pkg = JSON.parse(
+      require("node:fs").readFileSync(join(root, "package.json"), "utf-8")
+    );
+    if (pkg.version) version = pkg.version;
+  } catch {
+    try {
+      const cargo = require("node:fs").readFileSync(join(root, "Cargo.toml"), "utf-8");
+      const vMatch = cargo.match(/^version\s*=\s*"([^"]+)"/m);
+      if (vMatch) version = vMatch[1];
+    } catch {
+      // No version found
+    }
+  }
+
+  return { version, hasCI, hasTests, hasContributing };
+}
+
+export async function extractVoiceSamples(root: string): Promise<string[]> {
+  const readmePaths = ["README.md", "readme.md", "Readme.md"];
+  let readmeContent: string | null = null;
+
+  for (const name of readmePaths) {
+    try {
+      readmeContent = await readFile(join(root, name), "utf-8");
+      break;
+    } catch {
+      // Try next
+    }
+  }
+
+  if (!readmeContent) return [];
+
+  const lines = readmeContent.split("\n");
+  const samples: string[] = [];
+
+  for (const line of lines) {
+    if (samples.length >= 8) break;
+    const trimmed = line.trim();
+    // Skip headers, badges, code blocks, empty lines, links-only lines
+    if (!trimmed) continue;
+    if (trimmed.startsWith("#")) continue;
+    if (trimmed.startsWith("```")) continue;
+    if (trimmed.startsWith("![")) continue;
+    if (trimmed.startsWith("[![")) continue;
+    if (trimmed.startsWith("|")) continue;
+    if (trimmed.startsWith("-") && trimmed.length < 30) continue;
+    if (trimmed.length < 20) continue;
+    // Must look like a prose sentence (contains spaces, reasonable length)
+    if (trimmed.split(" ").length < 4) continue;
+    samples.push(trimmed);
+  }
+
+  return samples;
+}
+
+export async function extractExistingDescription(root: string): Promise<string | null> {
+  // Try package.json
+  try {
+    const pkg = JSON.parse(await readFile(join(root, "package.json"), "utf-8"));
+    if (pkg.description && pkg.description.length > 5) return pkg.description;
+  } catch { /* skip */ }
+
+  // Try Cargo.toml
+  try {
+    const cargo = await readFile(join(root, "Cargo.toml"), "utf-8");
+    const match = cargo.match(/^description\s*=\s*"([^"]+)"/m);
+    if (match) return match[1];
+  } catch { /* skip */ }
+
+  // Try pyproject.toml
+  try {
+    const pyproject = await readFile(join(root, "pyproject.toml"), "utf-8");
+    const match = pyproject.match(/^description\s*=\s*"([^"]+)"/m);
+    if (match) return match[1];
+  } catch { /* skip */ }
+
   return null;
 }
 
@@ -262,6 +438,15 @@ export async function readRepo(root: string): Promise<RepoInfo> {
   const manifest = manifests.find((m) => existsSync(join(root, m))) ?? null;
   const hasReadme = existsSync(join(root, "README.md")) || existsSync(join(root, "readme.md"));
 
+  // Extract enrichment signals (parallel, outside LLM token budget)
+  const [maturitySignals, existingVisuals, candidateVoiceSamples, existingDescription] =
+    await Promise.all([
+      Promise.resolve(detectMaturitySignals(root)),
+      extractVisualDNA(root, filtered),
+      extractVoiceSamples(root),
+      extractExistingDescription(root),
+    ]);
+
   return {
     root,
     files,
@@ -269,5 +454,9 @@ export async function readRepo(root: string): Promise<RepoInfo> {
     manifest,
     hasReadme,
     isCloned: false,
+    maturitySignals,
+    existingVisuals,
+    candidateVoiceSamples,
+    existingDescription,
   };
 }

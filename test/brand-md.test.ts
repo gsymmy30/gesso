@@ -97,4 +97,21 @@ describe("renderBrandMd", () => {
     const md = renderBrandMd(mockBrand);
     expect(md).toContain("synergy, leverage");
   });
+
+  it("includes before/after section when existingDescription provided", () => {
+    const md = renderBrandMd(mockBrand, "A simple testing utility");
+    expect(md).toContain("## Before & After");
+    expect(md).toContain("A simple testing utility");
+    expect(md).toContain("Test in one line");
+  });
+
+  it("omits before/after section when no existingDescription", () => {
+    const md = renderBrandMd(mockBrand);
+    expect(md).not.toContain("## Before & After");
+  });
+
+  it("omits before/after section when existingDescription is null", () => {
+    const md = renderBrandMd(mockBrand, null);
+    expect(md).not.toContain("## Before & After");
+  });
 });

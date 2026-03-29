@@ -2,7 +2,7 @@ import * as readline from "node:readline";
 import pLimit from "p-limit";
 import { readRepo, cloneRepo, resolveRepoUrl, type RepoInfo } from "../analyze/repo-reader.js";
 import { analyzeRepo } from "../analyze/signal-extractor.js";
-import { scoreBrand, projectScore } from "../analyze/brand-scorer.js";
+import { scoreBrand, projectScore, scoreSpecificity } from "../analyze/brand-scorer.js";
 import { generatePositioning } from "../generate/positioning.js";
 import { generateVoice } from "../generate/voice.js";
 import { generateCopy } from "../generate/copy.js";
@@ -161,7 +161,7 @@ export async function runGenerate(opts: GenerateOptions) {
     limit(async () => {
       progress.update("Visual Identity", "running");
       const t = Date.now();
-      const result = await generateVisual(analysis, positioning);
+      const result = await generateVisual(analysis, positioning, repo.existingVisuals);
       progress.update("Visual Identity", "done", (Date.now() - t) / 1000);
       visual = result;
       return result;
@@ -316,6 +316,18 @@ export async function runGenerate(opts: GenerateOptions) {
   const projected = projectScore(scoreItems);
   printProjectedScore(total, projected);
 
+  // Specificity scoring (anti-slop metric)
+  const specificity = await scoreSpecificity(analysis, positioning, copy);
+  const specificityTotal = specificity.onlyWeTest + specificity.repeatability;
+  if (specificityTotal < 14) {
+    console.log(
+      `  Specificity: ${specificityTotal}/20 ⚠ Output may be too generic. Try \`--brief\` or improve your README.`
+    );
+  } else {
+    console.log(`  Specificity: ${specificityTotal}/20 ✓ ${specificity.evidence}`);
+  }
+  console.log();
+
   // Build brand.json
   const brandJson = buildBrandJson({
     analysis,
@@ -328,13 +340,16 @@ export async function runGenerate(opts: GenerateOptions) {
     brandScore: { before: total, after: projected, breakdown: scoreItems },
   });
 
-  // Preview key outputs
+  // Preview key outputs (with before/after if available)
+  if (repo.existingDescription) {
+    printSnippet("Before", repo.existingDescription);
+  }
   printSnippet("One-liner", positioning.oneLiner);
   printSnippet("Tagline", positioning.tagline);
   printSnippet("Hero", `${copy.heroHeadline}\n${copy.heroSubheadline}`);
 
   // Build file list for review
-  const brandMdContent = renderBrandMd(brandJson);
+  const brandMdContent = renderBrandMd(brandJson, repo.existingDescription);
   const filesToWrite: { path: string; content: string }[] = [
     { path: "brand.json", content: JSON.stringify(brandJson, null, 2) + "\n" },
     { path: "brand.md", content: brandMdContent },
@@ -353,7 +368,7 @@ export async function runGenerate(opts: GenerateOptions) {
   // ── Stage 6: Write ─────────────────────────────────────────
   if (opts.yes) {
     // Auto-accept all
-    await writeAllFiles(root, brandJson, agentInstructions, logoSvg, ogImageBuf);
+    await writeAllFiles(root, brandJson, agentInstructions, logoSvg, ogImageBuf, repo.existingDescription);
     printSuccess("All files written.");
   } else {
     const { accepted, skipped } = await reviewFiles(diffs);
@@ -368,7 +383,7 @@ export async function runGenerate(opts: GenerateOptions) {
       if (diff.path === "brand.json") {
         await writeBrandJson(root, brandJson);
       } else if (diff.path === "brand.md") {
-        await writeBrandMd(root, brandJson);
+        await writeBrandMd(root, brandJson, repo.existingDescription);
       } else if (diff.path === "AGENTS.md" && agentInstructions.agentsMdSection) {
         await writeAgentsMd(root, agentInstructions.agentsMdSection);
       } else if (diff.path === "CLAUDE.md" && agentInstructions.claudeMdSection) {
@@ -402,10 +417,11 @@ async function writeAllFiles(
   brandJson: any,
   agentInstructions: AgentInstructions,
   logoSvg?: string,
-  ogImageBuf?: Buffer
+  ogImageBuf?: Buffer,
+  existingDescription?: string | null
 ) {
   await writeBrandJson(root, brandJson);
-  await writeBrandMd(root, brandJson);
+  await writeBrandMd(root, brandJson, existingDescription);
   if (agentInstructions.agentsMdSection) {
     await writeAgentsMd(root, agentInstructions.agentsMdSection);
   }

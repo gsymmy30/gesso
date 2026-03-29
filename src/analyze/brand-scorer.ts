@@ -1,5 +1,14 @@
 import { generateStructured } from "../llm/client.js";
-import { BrandScoreLLMSchema, type BrandScoreItem, type BrandScoreLLM } from "../llm/schemas.js";
+import {
+  BrandScoreLLMSchema,
+  SpecificityScoreSchema,
+  type BrandScoreItem,
+  type BrandScoreLLM,
+  type SpecificityScore,
+  type Analysis,
+  type Positioning,
+  type Copy,
+} from "../llm/schemas.js";
 import type { RepoInfo } from "./repo-reader.js";
 
 // Heuristic checks (fast, free, no LLM)
@@ -201,6 +210,51 @@ export async function scoreBrand(
   const maxTotal = items.reduce((sum, i) => sum + i.maxScore, 0);
 
   return { total, maxTotal, items };
+}
+
+export async function scoreSpecificity(
+  analysis: Analysis,
+  positioning: Positioning,
+  copy: Copy
+): Promise<SpecificityScore> {
+  try {
+    return await generateStructured({
+      schema: SpecificityScoreSchema,
+      schemaName: "specificity_score",
+      temperature: 0,
+      system: `You are a brand quality evaluator. Your job is to detect generic AI slop vs project-specific output.
+
+Score these dimensions:
+- onlyWeTest (0-10): Could a competitor swap their logo onto these lines? 0 = any company could use this. 10 = references specific architecture, approach, or tradeoff unique to this product.
+- repeatability (0-10): Could someone naturally paraphrase this to a friend? 0 = abstract jargon. 10 = clear, memorable, and specific.
+- categoryGeneric: true if the output uses common patterns for the product category without adding anything specific.
+- evidence: What specific detail does the output reference? Quote the most project-specific phrase.
+- reason: One sentence explaining the score.
+
+Be strict. Most AI-generated brand copy scores 3-5. Only score 8+ if the output references concrete technical decisions, specific problems, or unique approaches.`,
+      prompt: `Evaluate the specificity of this generated brand output:
+
+Product: ${analysis.productName}
+Archetype: ${analysis.archetype}
+Unique approach: ${analysis.uniqueApproach}
+
+Generated one-liner: ${positioning.oneLiner}
+Generated tagline: ${positioning.tagline}
+Generated hero headline: ${copy.heroHeadline}
+Generated hero subheadline: ${copy.heroSubheadline}
+Generated positioning: ${positioning.positioningStatement}`,
+      maxTokens: 512,
+      timeoutMs: 15_000,
+    });
+  } catch {
+    return {
+      onlyWeTest: 0,
+      repeatability: 0,
+      categoryGeneric: true,
+      evidence: "Scoring failed",
+      reason: "Could not evaluate specificity",
+    };
+  }
 }
 
 export function projectScore(
