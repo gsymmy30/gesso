@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-03-29T18:09:01.606Z",
+  "generatedBy": "gesso-cli",
+  "productName": "gesso-cli",
+  "archetype": "cli-tool",
+  "positioning": {
+    "oneLiner": "Generate brand identity that actually matches your codebase in one command",
+    "positioningStatement": "For developers building open-source and side projects who end up with generic branding that ignores what they actually built, gesso-cli is a codebase-driven brand generator that creates contextual logos, colors, and copy by analyzing your repository structure and tech stack first, unlike generic logo makers that start with preset templates.",
+    "category": "Codebase-driven brand generator",
+    "tagline": "Branding that reads your code first",
+    "elevatorPitch": "Most developers building side projects end up with generic branding - a random logo that could belong to any app. gesso-cli fixes this by reading your actual codebase first. It analyzes your repository structure, detects your tech stack, and understands whether you're building a CLI tool, web framework, or data pipeline. Then it generates contextual brand assets - logos, colors, and copy - that actually reflect what you built. One command, brand identity that makes sense for your project."
+  },
+  "voice": {
+    "toneWords": [
+      "terse",
+      "matter-of-fact",
+      "code-aware",
+      "no-nonsense"
+    ],
+    "doList": [
+      "Lead with what the tool does, not what it enables",
+      "Use repo/codebase terminology naturally",
+      "Keep commands and descriptions under 10 words when possible",
+      "State capabilities as facts, not promises",
+      "Reference actual file types and tech stack elements"
+    ],
+    "dontList": [
+      "Explain why branding matters (they already know)",
+      "Use marketing speak about 'brand identity journey'",
+      "Apologize for limitations or mention what's coming soon",
+      "Add unnecessary qualifiers like 'simply' or 'just'",
+      "Talk about creativity or inspiration"
+    ],
+    "exampleSentences": [
+      "gesso analyze --dry-run shows brand score without generating files",
+      "Generates logo variants based on your package.json and README structure",
+      "Brand assets saved to ./brand/ directory"
+    ],
+    "bannedWords": [
+      "seamless",
+      "unlock",
+      "reimagine",
+      "empower",
+      "next-generation",
+      "cutting-edge",
+      "revolutionize",
+      "robust",
+      "leverage",
+      "supercharge",
+      "game-changing",
+      "disruptive",
+      "effortless",
+      "magical",
+      "intelligent",
+      "smart",
+      "automagically"
+    ],
+    "personality": "A CLI tool that treats branding as a technical problem to solve, not a creative journey to embark on. Speaks in the same direct, functional language developers use when describing their code. Assumes users understand their own projects and just need the brand assets generated efficiently."
+  },
+  "copy": {
+    "heroHeadline": "Branding that reads your code first",
+    "heroSubheadline": "Generate logos, colors, and copy by analyzing your repository structure and tech stack instead of starting with generic templates.",
+    "ogDescription": "CLI tool that generates contextual brand assets by analyzing your codebase structure and tech stack first, not generic templates.",
+    "tweetLaunch": "Built gesso-cli: generates brand assets by reading your actual codebase first. Analyzes repo structure + tech stack, then creates contextual logos/colors/copy. No more generic branding that ignores what you actually built.",
+    "launchPost": "Most brand generators for developers start with generic templates and ask you to pick colors. Your CLI tool ends up with the same logo as a meditation app.\n\ngesso-cli flips this: it reads your codebase first. Analyzes repository structure, detects dependencies, maps your tech stack. Then generates logos, colors, and copy that actually match what you built.\n\nThe approach combines multiple AI models (Claude, OpenAI) with custom scoring algorithms. It parses file structures, identifies frameworks, reads existing docs. A brand scoring system uses heuristics plus LLM evaluation to ensure specificity.\n\nExample: analyzing a Rust CLI tool generates different assets than a React component library. The branding reflects actual architecture, not random aesthetic choices.\n\nSingle command execution. Outputs structured brand data you can use across README, website, social profiles. Finally, branding that knows the difference between a web framework and a data pipeline.",
+    "readmeIntro": "# gesso-cli\n\nGenerate complete brand identity from your codebase in one command. gesso-cli analyzes your repository structure, tech stack, and existing documentation to create contextual logos, colors, and copy.\n\nMost brand generators start with generic templates. Your CLI tool ends up with the same logo as a meditation app. gesso-cli reads your actual code first - parsing file structures, detecting dependencies, identifying frameworks - then generates brand assets that match what you actually built.\n\nCombines multiple AI models with custom scoring algorithms. Outputs structured brand data you can use across README, website, and social profiles. Single command execution, no generic templates."
+  },
+  "visual": {
+    "palette": {
+      "primary": "#2D3748",
+      "secondary": "#4A5568",
+      "accent": "#ED8936",
+      "background": "#FAFAFA",
+      "text": "#1A202C",
+      "muted": "#718096"
+    },
+    "paletteName": "Code Canvas",
+    "fontPairing": {
+      "heading": "JetBrains Mono",
+      "body": "Inter"
+    },
+    "archetype": "cli-tool"
+  },
+  "seo": {
+    "keywords": [
+      "gesso-cli",
+      "codebase-driven brand generator",
+      "contextual branding for developers",
+      "CLI brand identity tool",
+      "repository-based logo generator",
+      "tech stack brand analysis",
+      "open-source project branding",
+      "automated brand assets",
+      "developer branding tool",
+      "TypeScript CLI branding"
+    ],
+    "metaTitle": "gesso-cli - Codebase-Driven Brand Generator for Developers",
+    "metaDescription": "Generate contextual brand identity from your codebase in one command. Analyzes repo structure & tech stack to create matching logos, colors & copy.",
+    "ogTitle": "gesso-cli: Brand Identity That Matches Your Code",
+    "ogDescription": "CLI tool that generates contextual brand assets by analyzing your codebase structure and tech stack first, not generic templates.",
+    "structuredData": {
+      "type": "SoftwareApplication",
+      "name": "gesso-cli",
+      "description": "CLI tool that generates contextual brand identity by analyzing repository structure and tech stack to create matching logos, colors, and copy for developers building open-source and side projects"
+    }
+  },
+  "agentInstructions": {
+    "agentsMdSection": "<!-- gesso:brand-start -->\n## Brand Voice Guidelines\n\n**Tone**: Terse, matter-of-fact, code-aware, no-nonsense\n\n**Core Principle**: Treat branding as a technical problem to solve, not a creative journey. Speak like a CLI tool that understands codebases.\n\n### Voice Rules\n\n**DO:**\n- Lead with what the tool does, not what it enables\n- Use repo/codebase terminology naturally (package.json, README, src/, etc.)\n- Keep commands and descriptions under 10 words when possible\n- State capabilities as facts, not promises\n- Reference actual file types and tech stack elements\n\n**DON'T:**\n- Explain why branding matters (users already know)\n- Use marketing speak about \"brand identity journey\"\n- Apologize for limitations or mention what's coming soon\n- Add unnecessary qualifiers like \"simply\" or \"just\"\n- Talk about creativity or inspiration\n\n### Banned Words\nseamless, unlock, reimagine, empower, next-generation, cutting-edge, revolutionize, robust, leverage, supercharge, game-changing, disruptive, effortless, magical, intelligent, smart, automagically\n\n### Example Voice\n- \"gesso analyze --dry-run shows brand score without generating files\"\n- \"Generates logo variants based on your package.json and README structure\"\n- \"Brand assets saved to ./brand/ directory\"\n<!-- gesso:brand-end -->",
+    "claudeMdSection": "<!-- gesso:brand-start -->\n## gesso-cli Brand Guidelines\n\n**Product**: CLI tool that generates brand identity matching your codebase in one command\n\n**Voice**: Terse, matter-of-fact, code-aware. Assume users understand their projects and need efficient brand asset generation.\n\n### Writing Style\n\n**Commands & Descriptions**: Under 10 words when possible\n**Error Messages**: Direct, actionable, reference actual file paths\n**Documentation**: Lead with functionality, use repo terminology naturally\n\n### Language Patterns\n\n**Good**: \n- \"Analyzes TypeScript interfaces for color palette\"\n- \"Reads package.json dependencies for tech stack icons\"\n- \"Outputs SVG logos to ./brand/logos/\"\n\n**Avoid**:\n- Marketing language about brand journeys\n- Qualifiers like \"simply\" or \"just\"\n- Apologizing for limitations\n- Explaining why branding matters\n\n### Naming Conventions\n\n- Use kebab-case for CLI flags: `--dry-run`, `--output-dir`\n- Reference actual file extensions: `.ts`, `.json`, `.md`\n- Use standard directory names: `src/`, `dist/`, `brand/`\n\n**Banned Terms**: seamless, unlock, reimagine, empower, next-generation, cutting-edge, revolutionize, robust, leverage, supercharge, game-changing, disruptive, effortless, magical, intelligent, smart, automagically\n<!-- gesso:brand-end -->"
+  },
+  "brandScore": {
+    "before": 52,
+    "after": 72,
+    "breakdown": [
+      {
+        "name": "Tagline",
+        "score": 10,
+        "maxScore": 10,
+        "reason": "Found description in manifest"
+      },
+      {
+        "name": "Visual identity",
+        "score": 10,
+        "maxScore": 10,
+        "reason": "Logo + colors found"
+      },
+      {
+        "name": "Meta/OG tags",
+        "score": 10,
+        "maxScore": 10,
+        "reason": "OG tags found"
+      },
+      {
+        "name": "No banned words",
+        "score": 10,
+        "maxScore": 10,
+        "reason": "Clean copy"
+      },
+      {
+        "name": "Brand guide",
+        "score": 10,
+        "maxScore": 10,
+        "reason": "Brand/style guide found"
+      },
+      {
+        "name": "README clarity",
+        "score": 0,
+        "maxScore": 15,
+        "reason": "No README found. There is no positioning, explanation of what the project is, or who it's for."
+      },
+      {
+        "name": "Tone consistency",
+        "score": 0,
+        "maxScore": 15,
+        "reason": "No README or other documentation files found to evaluate tone consistency. Cannot assess voice across materials."
+      },
+      {
+        "name": "Feature naming",
+        "score": 0,
+        "maxScore": 10,
+        "reason": "No feature names, commands, or API elements visible in the provided content to evaluate naming consistency."
+      },
+      {
+        "name": "Error voice",
+        "score": 2,
+        "maxScore": 10,
+        "reason": "Error handling is present but inconsistent. Uses generic patterns like 'e instanceof Error ? e.message : String(e)' and basic 'Invalid repo:' messages. No consistent helpful tone or brand voice in error messages - they appear purely functional."
+      }
+    ]
+  }
+}
