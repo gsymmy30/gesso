@@ -61,10 +61,12 @@ export function printBrandScore(
   console.log();
 
   for (const item of items) {
-    const bar = colorBar(item.score, item.maxScore);
-    const name = item.name.padEnd(18);
-    const value = `${item.score}/${item.maxScore}`;
-    console.log(`    ${ui.muted(name)} ${bar}  ${ui.muted(value)}`);
+    const ratio = Math.min(item.score / item.maxScore, 1);
+    const value = `${item.score}/${item.maxScore}`.padStart(5);
+    const pct = `${Math.round(ratio * 100)}%`.padStart(4);
+    const name = item.name.padEnd(20);
+    const bar = colorBar(item.score, item.maxScore, 8);
+    console.log(`    ${ui.muted(name)} ${bar} ${ui.muted(value)} ${ui.dim(pct)}`);
   }
 
   console.log();

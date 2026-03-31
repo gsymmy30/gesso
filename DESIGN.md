@@ -88,8 +88,8 @@ After the visual identity generation step completes, terminal output switches fr
 - Success: ✓ (U+2713)
 - Failure: ✗ (U+2717)
 - Spinner: ◐◓◑◒ cycle (U+25D0-25D3)
-- Bar filled: █ (U+2588)
-- Bar empty: ░ (U+2591)
+- Bar filled: ━ (U+2501, heavy horizontal)
+- Bar empty: ╌ (U+254C, light dashed horizontal)
 - Box: ┌ ┐ └ ┘ │ ─ (box-drawing)
 - Section divider: ── (U+2500)
 

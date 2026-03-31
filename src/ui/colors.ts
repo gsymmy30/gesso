@@ -61,7 +61,7 @@ export function colorBar(
   else if (ratio >= 0.4) color = GESSO.accent;
   else color = GESSO.error;
 
-  return hex(color)("█".repeat(filled)) + chalk.dim("░".repeat(empty));
+  return hex(color)("━".repeat(filled)) + chalk.dim("╌".repeat(empty));
 }
 
 export function colorSwatch(hexColor: string): string {
