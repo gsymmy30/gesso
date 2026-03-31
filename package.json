@@ -8,9 +8,8 @@
   },
   "files": [
     "dist",
-    "assets",
-    "src/templates",
-    "src/fonts"
+    "src/assets",
+    "src/templates"
   ],
   "scripts": {
     "build": "tsup",

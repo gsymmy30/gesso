@@ -1,12 +1,36 @@
 import { generateStructured } from "../llm/client.js";
 import { VisualSchema, type Visual, type Analysis, type Positioning } from "../llm/schemas.js";
 import type { ExistingVisuals } from "../analyze/repo-reader.js";
+import { loadArchetype } from "../templates/archetypes/index.js";
 
 export async function generateVisual(
   analysis: Analysis,
   positioning: Positioning,
   existingVisuals?: ExistingVisuals
 ): Promise<Visual> {
+  const archetype = loadArchetype(analysis.archetype);
+
+  // Build archetype context for the LLM
+  let archetypeContext = "";
+  if (archetype) {
+    const paletteSummary = archetype.palettes
+      .map((p, i) => `  ${i + 1}. "${p.name}" — primary: ${p.primary}, accent: ${p.accent}`)
+      .join("\n");
+    const fontSummary = archetype.fontPairings
+      .map((f, i) => `  ${i + 1}. ${f.heading} / ${f.body}`)
+      .join("\n");
+    archetypeContext = `
+Curated options for "${analysis.archetype}" archetype:
+
+Palettes (use as starting points — adapt, don't copy verbatim):
+${paletteSummary}
+
+Font pairings (choose one or derive from these):
+${fontSummary}
+
+You may use one of these palettes directly if it fits, modify colors to better match the product, or create a new palette inspired by the archetype's direction. The font pairings are tested combinations — prefer them unless the product's personality demands something different.`;
+  }
+
   return generateStructured({
     schema: VisualSchema,
     schemaName: "visual",
@@ -31,8 +55,8 @@ Color palette rules:
 - muted: secondary text, borders. Must be readable but clearly subordinate.
 
 All colors must be hex values (#RRGGBB).
-Font pairing: choose real, freely available Google Fonts. 93% of tech products use sans-serif. Pick a geometric or grotesque sans-serif for headings unless the product's personality strongly warrants something else. Body font should be highly readable at small sizes.
-Palette name should be evocative (2-3 words, like "Arctic Depth" or "Sunset Workshop").`,
+Font pairing: choose from these bundled fonts ONLY: Space Grotesk, Inter, JetBrains Mono, IBM Plex Sans, DM Sans. These are the fonts available for logo rendering — picking anything else will cause a fallback to system fonts.
+Palette name should be evocative (2-3 words, like "Arctic Depth" or "Sunset Workshop").${archetypeContext}`,
     prompt: `Generate visual identity for:
 
 Product: ${analysis.productName}

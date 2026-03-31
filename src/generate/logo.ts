@@ -1,6 +1,7 @@
 import opentype, { type Font } from "opentype.js";
 import { join } from "node:path";
 import { readFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { generateStructured } from "../llm/client.js";
 import { z } from "zod";
 import type { Analysis, Positioning, Visual } from "../llm/schemas.js";
@@ -14,6 +15,44 @@ interface LogoOptions {
 export interface LogoResult {
   light: string;
   dark: string;
+}
+
+// Map font names to bundled file names
+const BUNDLED_FONTS: Record<string, string> = {
+  "Space Grotesk": "SpaceGrotesk-Bold.otf",
+  "Inter": "Inter-Bold.ttf",
+  "JetBrains Mono": "JetBrainsMono-Bold.otf",
+  "IBM Plex Sans": "IBMPlexSans-Bold.otf",
+  "DM Sans": "DMSans-Bold.ttf",
+};
+
+const fontCache = new Map<string, Font>();
+
+async function loadBundledFont(fontName: string): Promise<Font | null> {
+  if (fontCache.has(fontName)) return fontCache.get(fontName)!;
+
+  const fileName = BUNDLED_FONTS[fontName];
+  if (!fileName) return null;
+
+  const fontPath = join(getAssetsDir(), fileName);
+  if (!existsSync(fontPath)) return null;
+
+  try {
+    const fontBuffer = await readFile(fontPath);
+    const ab = fontBuffer.buffer.slice(
+      fontBuffer.byteOffset,
+      fontBuffer.byteOffset + fontBuffer.byteLength
+    );
+    const font = opentype.parse(ab);
+    fontCache.set(fontName, font);
+    return font;
+  } catch {
+    return null;
+  }
+}
+
+function getAssetsDir(): string {
+  return join(new URL(".", import.meta.url).pathname, "..", "assets");
 }
 
 // Parametric mark design. LLM controls shape, fill, modifiers, rotation, accents.
@@ -88,17 +127,19 @@ export async function generateLogo(opts: LogoOptions): Promise<LogoResult> {
   const primaryColor = visual.palette.primary;
   const accentColor = visual.palette.accent;
 
-  // Load font
+  // Load the heading font from the visual identity's font pairing
+  // Falls back through: selected heading font → Space Grotesk → any bundled font → text fallback
   let font: Font | null = null;
-  try {
-    const fontPath = getBundledFontPath();
-    const fontBuffer = await readFile(fontPath);
-    const ab = fontBuffer.buffer.slice(
-      fontBuffer.byteOffset,
-      fontBuffer.byteOffset + fontBuffer.byteLength
-    );
-    font = opentype.parse(ab);
-  } catch { /* text fallback */ }
+  const headingFont = visual.fontPairing.heading;
+  font = await loadBundledFont(headingFont);
+  if (!font) font = await loadBundledFont("Space Grotesk");
+  if (!font) {
+    // Try any available bundled font
+    for (const fontName of Object.keys(BUNDLED_FONTS)) {
+      font = await loadBundledFont(fontName);
+      if (font) break;
+    }
+  }
 
   // LLM picks parametric design
   const design = await generateStructured({
@@ -460,15 +501,6 @@ function composeLogo(
 }
 
 // ── Helpers ───────────────────────────────────────────────────
-
-function getBundledFontPath(): string {
-  return join(
-    new URL(".", import.meta.url).pathname,
-    "..",
-    "assets",
-    "SpaceGrotesk-Bold.ttf"
-  );
-}
 
 function buildOutlinedWordmark(font: Font, name: string, color: string): string {
   const fontSize = 48;

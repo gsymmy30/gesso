@@ -1,0 +1,43 @@
+{
+  "name": "data-infra",
+  "description": "Databases, data pipelines, ETL tools, analytics engines, observability",
+  "palettes": [
+    {
+      "name": "Arctic Depth",
+      "primary": "#0C4A6E",
+      "secondary": "#0369A1",
+      "accent": "#06B6D4",
+      "background": "#F0F9FF",
+      "text": "#0C1222",
+      "muted": "#64748B"
+    },
+    {
+      "name": "Copper Circuit",
+      "primary": "#292524",
+      "secondary": "#44403C",
+      "accent": "#EA580C",
+      "background": "#FAFAF9",
+      "text": "#0C0A09",
+      "muted": "#78716C"
+    },
+    {
+      "name": "Cold Steel",
+      "primary": "#1E293B",
+      "secondary": "#334155",
+      "accent": "#8B5CF6",
+      "background": "#F1F5F9",
+      "text": "#0F172A",
+      "muted": "#94A3B8"
+    }
+  ],
+  "fontPairings": [
+    {
+      "heading": "Space Grotesk",
+      "body": "IBM Plex Sans"
+    },
+    {
+      "heading": "Inter",
+      "body": "JetBrains Mono"
+    }
+  ]
+}

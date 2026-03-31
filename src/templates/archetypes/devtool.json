@@ -1,0 +1,43 @@
+{
+  "name": "devtool",
+  "description": "Developer tools, linters, formatters, build tools, IDE extensions, testing frameworks",
+  "palettes": [
+    {
+      "name": "Neon Workshop",
+      "primary": "#0D9488",
+      "secondary": "#14B8A6",
+      "accent": "#FBBF24",
+      "background": "#F0FDFA",
+      "text": "#0F172A",
+      "muted": "#64748B"
+    },
+    {
+      "name": "Forge Dark",
+      "primary": "#1C1917",
+      "secondary": "#292524",
+      "accent": "#F43F5E",
+      "background": "#FAFAF9",
+      "text": "#0C0A09",
+      "muted": "#78716C"
+    },
+    {
+      "name": "Blueprint",
+      "primary": "#1D4ED8",
+      "secondary": "#2563EB",
+      "accent": "#34D399",
+      "background": "#F8FAFC",
+      "text": "#0F172A",
+      "muted": "#94A3B8"
+    }
+  ],
+  "fontPairings": [
+    {
+      "heading": "Space Grotesk",
+      "body": "Inter"
+    },
+    {
+      "heading": "JetBrains Mono",
+      "body": "IBM Plex Sans"
+    }
+  ]
+}

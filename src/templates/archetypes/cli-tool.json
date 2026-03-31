@@ -1,0 +1,43 @@
+{
+  "name": "cli-tool",
+  "description": "Command-line tools, terminal utilities, shell scripts",
+  "palettes": [
+    {
+      "name": "Midnight Terminal",
+      "primary": "#0A2540",
+      "secondary": "#1B3A5C",
+      "accent": "#00D4AA",
+      "background": "#FAFAFA",
+      "text": "#1A1A2E",
+      "muted": "#6B7280"
+    },
+    {
+      "name": "Warm Carbon",
+      "primary": "#2D3748",
+      "secondary": "#4A5568",
+      "accent": "#F6AD55",
+      "background": "#FFFDF9",
+      "text": "#1A202C",
+      "muted": "#718096"
+    },
+    {
+      "name": "Electric Slate",
+      "primary": "#334155",
+      "secondary": "#475569",
+      "accent": "#38BDF8",
+      "background": "#F8FAFC",
+      "text": "#0F172A",
+      "muted": "#94A3B8"
+    }
+  ],
+  "fontPairings": [
+    {
+      "heading": "Space Grotesk",
+      "body": "Inter"
+    },
+    {
+      "heading": "JetBrains Mono",
+      "body": "DM Sans"
+    }
+  ]
+}

@@ -35,7 +35,14 @@ const program = new Command();
 program
   .name("gesso")
   .version(pkg.version)
-  .description("Generate complete brand identity from your codebase");
+  .description("Generate complete brand identity from your codebase")
+  .addHelpText("after", `
+Examples:
+  $ gesso                          Analyze current directory
+  $ gesso -r owner/repo            Analyze a GitHub repo
+  $ gesso --yes --skip-brief       Non-interactive mode (CI/scripts)
+  $ gesso score                    Check brand score without generating
+`);
 
 program
   .command("generate", { isDefault: true })
@@ -50,7 +57,16 @@ program
     try {
       initLLM();
     } catch (e) {
-      printError(e instanceof Error ? e.message : String(e));
+      const msg = e instanceof Error ? e.message : String(e);
+      printError(msg);
+      if (msg.includes("API key") || msg.includes("ANTHROPIC") || msg.includes("OPENAI")) {
+        console.log();
+        console.log("  To fix this, set one of these environment variables:");
+        console.log("    export ANTHROPIC_API_KEY=sk-ant-...");
+        console.log("    export OPENAI_API_KEY=sk-...");
+        console.log();
+        console.log("  Or create a .env file in your project root.");
+      }
       process.exit(1);
     }
 

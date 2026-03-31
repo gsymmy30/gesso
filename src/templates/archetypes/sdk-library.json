@@ -1,0 +1,43 @@
+{
+  "name": "sdk-library",
+  "description": "Libraries, SDKs, packages, frameworks consumed by other developers",
+  "palettes": [
+    {
+      "name": "Clean Spec",
+      "primary": "#1E293B",
+      "secondary": "#334155",
+      "accent": "#6366F1",
+      "background": "#FFFFFF",
+      "text": "#0F172A",
+      "muted": "#64748B"
+    },
+    {
+      "name": "Emerald Docs",
+      "primary": "#065F46",
+      "secondary": "#047857",
+      "accent": "#10B981",
+      "background": "#F9FAFB",
+      "text": "#111827",
+      "muted": "#6B7280"
+    },
+    {
+      "name": "Monochrome Sharp",
+      "primary": "#18181B",
+      "secondary": "#27272A",
+      "accent": "#A78BFA",
+      "background": "#FAFAFA",
+      "text": "#09090B",
+      "muted": "#71717A"
+    }
+  ],
+  "fontPairings": [
+    {
+      "heading": "Inter",
+      "body": "Inter"
+    },
+    {
+      "heading": "Space Grotesk",
+      "body": "IBM Plex Sans"
+    }
+  ]
+}

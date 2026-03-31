@@ -1,0 +1,43 @@
+{
+  "name": "api-service",
+  "description": "REST/GraphQL APIs, backend services, microservices, SaaS backends",
+  "palettes": [
+    {
+      "name": "Deep Ocean",
+      "primary": "#1E40AF",
+      "secondary": "#2563EB",
+      "accent": "#F59E0B",
+      "background": "#F8FAFC",
+      "text": "#0F172A",
+      "muted": "#64748B"
+    },
+    {
+      "name": "Signal Green",
+      "primary": "#14532D",
+      "secondary": "#166534",
+      "accent": "#22C55E",
+      "background": "#FAFDF7",
+      "text": "#0A0A0A",
+      "muted": "#6B7280"
+    },
+    {
+      "name": "Graphite Wire",
+      "primary": "#1F2937",
+      "secondary": "#374151",
+      "accent": "#EC4899",
+      "background": "#F9FAFB",
+      "text": "#111827",
+      "muted": "#9CA3AF"
+    }
+  ],
+  "fontPairings": [
+    {
+      "heading": "DM Sans",
+      "body": "Inter"
+    },
+    {
+      "heading": "Space Grotesk",
+      "body": "DM Sans"
+    }
+  ]
+}

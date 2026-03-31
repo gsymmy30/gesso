@@ -1,0 +1,43 @@
+{
+  "name": "web-app",
+  "description": "Web applications, dashboards, SaaS frontends, portals",
+  "palettes": [
+    {
+      "name": "Soft Product",
+      "primary": "#4F46E5",
+      "secondary": "#6366F1",
+      "accent": "#F97316",
+      "background": "#FFFFFF",
+      "text": "#111827",
+      "muted": "#6B7280"
+    },
+    {
+      "name": "Warm Interface",
+      "primary": "#B45309",
+      "secondary": "#D97706",
+      "accent": "#0EA5E9",
+      "background": "#FFFBEB",
+      "text": "#1C1917",
+      "muted": "#78716C"
+    },
+    {
+      "name": "Neutral Canvas",
+      "primary": "#18181B",
+      "secondary": "#3F3F46",
+      "accent": "#E11D48",
+      "background": "#FAFAFA",
+      "text": "#09090B",
+      "muted": "#A1A1AA"
+    }
+  ],
+  "fontPairings": [
+    {
+      "heading": "DM Sans",
+      "body": "DM Sans"
+    },
+    {
+      "heading": "Space Grotesk",
+      "body": "Inter"
+    }
+  ]
+}

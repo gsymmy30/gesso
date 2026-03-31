@@ -67,3 +67,26 @@ export function colorBar(
 export function colorSwatch(hexColor: string): string {
   return chalk.bgHex(hexColor)("      ");
 }
+
+export function brandSwatchLine(palette: {
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  text: string;
+  muted: string;
+}): string {
+  const swatch = (color: string, label: string) =>
+    `${chalk.bgHex(color)("  ")} ${chalk.hex("#8B8B8B")(label)}`;
+
+  return [
+    "  ",
+    swatch(palette.primary, "primary"),
+    "  ",
+    swatch(palette.accent, "accent"),
+    "  ",
+    swatch(palette.secondary, "secondary"),
+    "  ",
+    swatch(palette.text, "text"),
+  ].join("");
+}

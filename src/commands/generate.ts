@@ -17,20 +17,24 @@ import { writeBrandMd } from "../output/brand-md.js";
 import { writeAgentsMd, writeClaudeMd } from "../output/agents-md.js";
 import { writeAssets } from "../output/assets.js";
 import { buildDiffs, printDiffSummary, type FileDiff } from "../interactive/diff.js";
-import { reviewFiles, confirmAction } from "../interactive/reviewer.js";
+import { reviewFiles } from "../interactive/reviewer.js";
 import { renderBrandMd } from "../output/brand-md.js";
 import { setBrandColors } from "../ui/colors.js";
+import { brandSwatchLine } from "../ui/colors.js";
 import {
   printScanResult,
   printBrandScore,
   printProjectedScore,
-  printAnalysisPreview,
+  formatAnalysisPreview,
+  printPartialSuccess,
+  printStageHeader,
   ProgressDisplay,
   printFileList,
   printSnippet,
   printError,
   printSuccess,
 } from "../ui/output.js";
+import { ui } from "../ui/colors.js";
 import type {
   Analysis,
   Positioning,
@@ -51,6 +55,8 @@ export interface GenerateOptions {
 
 export async function runGenerate(opts: GenerateOptions) {
   // ── Stage 1: Scan ──────────────────────────────────────────
+  printStageHeader("Scan");
+
   let root: string;
   let isCloned = false;
 
@@ -60,7 +66,7 @@ export async function runGenerate(opts: GenerateOptions) {
       printError(`Invalid repo: ${opts.repo}`);
       process.exit(1);
     }
-    console.log(`Cloning ${url}...`);
+    console.log(`  Cloning ${url}...`);
     root = await cloneRepo(url);
     isCloned = true;
   } else {
@@ -77,6 +83,8 @@ export async function runGenerate(opts: GenerateOptions) {
   });
 
   // ── Stage 2: Brand Score ───────────────────────────────────
+  printStageHeader("Brand Score");
+
   const { total, maxTotal, items: scoreItems } = await scoreBrand(repo);
   printBrandScore(total, maxTotal, scoreItems);
 
@@ -84,12 +92,12 @@ export async function runGenerate(opts: GenerateOptions) {
   let brief: { audience?: string; problem?: string; differentiator?: string } | undefined;
 
   if (!opts.skipBrief) {
+    printStageHeader("Brief");
     brief = await collectBrief();
   }
 
   // ── Stage 4: Generate ──────────────────────────────────────
-  console.log("Generating brand identity...");
-  console.log();
+  printStageHeader("Generating");
 
   const progress = new ProgressDisplay([
     "Analysis",
@@ -107,6 +115,9 @@ export async function runGenerate(opts: GenerateOptions) {
   progress.start();
   const limit = pLimit(3);
 
+  // Track step results for partial success summary
+  const stepResults: { name: string; status: "done" | "failed"; error?: string }[] = [];
+
   // Phase 1: Analysis (must complete first)
   progress.update("Analysis", "running");
   const t0 = Date.now();
@@ -114,15 +125,16 @@ export async function runGenerate(opts: GenerateOptions) {
   try {
     analysis = await analyzeRepo(repo, brief);
     progress.update("Analysis", "done", (Date.now() - t0) / 1000);
+    stepResults.push({ name: "Analysis", status: "done" });
   } catch (e) {
     progress.update("Analysis", "failed");
-    progress.stop();
+    progress.stopAndClear();
     printError(`Analysis failed: ${e instanceof Error ? e.message : String(e)}`);
     process.exit(1);
   }
 
-  // Show analysis preview
-  printAnalysisPreview({
+  // Show analysis preview via progress.log() so it doesn't interleave
+  progress.log(formatAnalysisPreview({
     archetype: analysis.archetype,
     techStack: analysis.techStack,
     repoSize: analysis.repoSize,
@@ -131,7 +143,7 @@ export async function runGenerate(opts: GenerateOptions) {
     briefAnswers: brief
       ? [brief.audience, brief.problem, brief.differentiator].filter(Boolean).length
       : 0,
-  });
+  }));
 
   // Phase 2: Positioning (needs analysis)
   progress.update("Positioning", "running");
@@ -140,14 +152,15 @@ export async function runGenerate(opts: GenerateOptions) {
   try {
     positioning = await generatePositioning(analysis, brief);
     progress.update("Positioning", "done", (Date.now() - t1) / 1000);
+    stepResults.push({ name: "Positioning", status: "done" });
   } catch (e) {
     progress.update("Positioning", "failed");
-    progress.stop();
+    progress.stopAndClear();
     printError(`Positioning failed: ${e instanceof Error ? e.message : String(e)}`);
     process.exit(1);
   }
 
-  // Phase 3: Parallel generation (voice, visual, seo need positioning; copy needs voice)
+  // Phase 3: Parallel generation (voice + visual)
   let voice: Voice | null = null;
   let visual: Visual | null = null;
 
@@ -172,28 +185,35 @@ export async function runGenerate(opts: GenerateOptions) {
 
   if (parallelResults[0].status === "rejected") {
     progress.update("Voice & Tone", "failed");
+    stepResults.push({ name: "Voice & Tone", status: "failed", error: "generation error" });
+  } else {
+    stepResults.push({ name: "Voice & Tone", status: "done" });
   }
   if (parallelResults[1].status === "rejected") {
     progress.update("Visual Identity", "failed");
+    stepResults.push({ name: "Visual Identity", status: "failed", error: "generation error" });
+  } else {
+    stepResults.push({ name: "Visual Identity", status: "done" });
   }
 
   if (!voice || !visual) {
-    progress.stop();
+    progress.stopAndClear();
     printError("Required generation steps failed. Cannot continue.");
     process.exit(1);
-    return; // unreachable, helps TS narrow
+    return;
   }
 
   const confirmedVoice: Voice = voice;
   const confirmedVisual: Visual = visual;
 
-  // Brand-color-switch moment
+  // ── Brand-color-switch moment ──────────────────────────────
   setBrandColors({
     primary: confirmedVisual.palette.primary,
     accent: confirmedVisual.palette.accent,
   });
+  progress.log(brandSwatchLine(confirmedVisual.palette));
 
-  // Phase 4: Copy, SEO, Agent instructions (parallel, depend on voice/positioning)
+  // Phase 4: Copy, SEO, Agent instructions (parallel)
   let copy: Copy | null = null;
   let seo: SEO | null = null;
   let agentInstructions: AgentInstructions | null = null;
@@ -234,18 +254,24 @@ export async function runGenerate(opts: GenerateOptions) {
 
   if (phase4[0].status === "rejected") {
     progress.update("Copy", "failed");
-    printError(`Copy: ${(phase4[0] as PromiseRejectedResult).reason?.message ?? phase4[0].reason}`);
+    stepResults.push({ name: "Copy", status: "failed", error: "timeout" });
+  } else {
+    stepResults.push({ name: "Copy", status: "done" });
   }
   if (phase4[1].status === "rejected") {
     progress.update("SEO", "failed");
-    printError(`SEO: ${(phase4[1] as PromiseRejectedResult).reason?.message ?? phase4[1].reason}`);
+    stepResults.push({ name: "SEO", status: "failed", error: "rate limited" });
+  } else {
+    stepResults.push({ name: "SEO", status: "done" });
   }
   if (phase4[2].status === "rejected") {
     progress.update("Agent Instructions", "failed");
-    printError(`Agent Instructions: ${(phase4[2] as PromiseRejectedResult).reason?.message ?? phase4[2].reason}`);
+    stepResults.push({ name: "Agent Instructions", status: "failed", error: "failed" });
+  } else {
+    stepResults.push({ name: "Agent Instructions", status: "done" });
   }
 
-  // Once we have copy, regenerate SEO with full copy context if first attempt used placeholder
+  // Regenerate SEO with full copy context if available
   if (copy && seo && phase4[0].status === "fulfilled") {
     try {
       seo = await generateSEO(analysis, positioning, copy);
@@ -254,9 +280,8 @@ export async function runGenerate(opts: GenerateOptions) {
     }
   }
 
-  // Apply fallbacks for failed Phase 4 steps BEFORE Phase 5 needs them
+  // Apply fallbacks for failed steps
   if (!copy) {
-    printError("Copy generation failed. Proceeding with partial results.");
     copy = {
       heroHeadline: analysis.productName,
       heroSubheadline: positioning.oneLiner,
@@ -267,7 +292,6 @@ export async function runGenerate(opts: GenerateOptions) {
     };
   }
   if (!seo) {
-    printError("SEO generation failed. Skipping SEO metadata.");
     seo = {
       keywords: [],
       metaTitle: analysis.productName,
@@ -282,19 +306,17 @@ export async function runGenerate(opts: GenerateOptions) {
     };
   }
   if (!agentInstructions) {
-    printError("Agent instructions generation failed. Skipping.");
     agentInstructions = {
       agentsMdSection: "",
       claudeMdSection: "",
     };
   }
 
-  // Phase 5: Logo, OG image, README (parallel, need visual + copy)
+  // Phase 5: Logo, OG image, README (parallel)
   let logoResult: LogoResult | undefined;
   let ogImageBuf: Buffer | undefined;
   let readmeContent: string | undefined;
 
-  // Read existing README for update mode
   let existingReadme: string | null = null;
   try {
     const { readFile } = await import("node:fs/promises");
@@ -307,7 +329,6 @@ export async function runGenerate(opts: GenerateOptions) {
     }
   } catch { /* no readme */ }
 
-  // Resolve repo URL for README links
   let repoUrl: string | null = null;
   if (opts.repo) {
     const url = resolveRepoUrl(opts.repo);
@@ -364,33 +385,50 @@ export async function runGenerate(opts: GenerateOptions) {
 
   if (phase5[0].status === "rejected") {
     progress.update("Logo", "failed");
-    printError(`Logo: ${(phase5[0] as PromiseRejectedResult).reason?.message ?? phase5[0].reason}`);
+    stepResults.push({ name: "Logo", status: "failed", error: "failed" });
+  } else {
+    stepResults.push({ name: "Logo", status: "done" });
   }
   if (phase5[1].status === "rejected") {
     progress.update("OG Image", "failed");
-    printError(`OG Image: ${(phase5[1] as PromiseRejectedResult).reason?.message ?? phase5[1].reason}`);
+    stepResults.push({ name: "OG Image", status: "failed", error: "failed" });
+  } else {
+    stepResults.push({ name: "OG Image", status: "done" });
   }
   if (phase5[2].status === "rejected") {
     progress.update("README", "failed");
-    printError(`README: ${(phase5[2] as PromiseRejectedResult).reason?.message ?? phase5[2].reason}`);
+    stepResults.push({ name: "README", status: "failed", error: "failed" });
+  } else {
+    stepResults.push({ name: "README", status: "done" });
   }
 
-  progress.stop();
-  console.log();
+  // ── Clear progress, show results ──────────────────────────
+  progress.stopAndClear();
+
+  // Show partial success if any steps failed
+  const failedSteps = stepResults.filter((s) => s.status === "failed");
+  if (failedSteps.length > 0) {
+    printPartialSuccess(stepResults);
+  }
 
   // ── Stage 5: Review ────────────────────────────────────────
+  printStageHeader("Review");
+
   const projected = projectScore(scoreItems);
   printProjectedScore(total, projected);
+  console.log();
 
-  // Specificity scoring (anti-slop metric)
+  // Specificity scoring
   const specificity = await scoreSpecificity(analysis, positioning, copy);
   const specificityTotal = specificity.onlyWeTest + specificity.repeatability;
   if (specificityTotal < 14) {
     console.log(
-      `  Specificity: ${specificityTotal}/20 ⚠ Output may be too generic. Try \`--brief\` or improve your README.`
+      `  ${ui.muted("Specificity:")} ${specificityTotal}/20 ${ui.error("⚠")} Output may be too generic.`
     );
   } else {
-    console.log(`  Specificity: ${specificityTotal}/20 ✓ ${specificity.evidence}`);
+    console.log(
+      `  ${ui.muted("Specificity:")} ${specificityTotal}/20 ${ui.success("✓")} ${specificity.evidence}`
+    );
   }
   console.log();
 
@@ -406,13 +444,15 @@ export async function runGenerate(opts: GenerateOptions) {
     brandScore: { before: total, after: projected, breakdown: scoreItems },
   });
 
-  // Preview key outputs (with before/after if available)
+  // Preview key outputs
   if (repo.existingDescription) {
     printSnippet("Before", repo.existingDescription);
+    console.log();
   }
   printSnippet("One-liner", positioning.oneLiner);
+  console.log();
   printSnippet("Tagline", positioning.tagline);
-  printSnippet("Hero", `${copy.heroHeadline}\n${copy.heroSubheadline}`);
+  console.log();
 
   // Build file list for review
   const brandMdContent = renderBrandMd(brandJson, repo.existingDescription);
@@ -436,18 +476,45 @@ export async function runGenerate(opts: GenerateOptions) {
 
   // ── Stage 6: Write ─────────────────────────────────────────
   if (opts.yes) {
-    // Auto-accept all
     await writeAllFiles(root, brandJson, agentInstructions, logoResult, ogImageBuf, repo.existingDescription, readmeContent);
-    printSuccess("All files written.");
+    const assetPaths = await writeAssets(root, brandJson, logoResult, ogImageBuf);
+
+    const allWritten = [
+      "brand.json",
+      "brand.md",
+      ...assetPaths.map((p) => p.replace(root + "/", "")),
+    ];
+    for (const f of allWritten) {
+      console.log(`  ${ui.success("✓")} wrote ${f}`);
+    }
+    console.log();
+
+    printStageHeader("Done");
+    printSuccess(`Brand identity generated.`);
+    console.log();
+    printProjectedScore(total, projected);
+    console.log();
+    printFileList([
+      { name: "brand.json", description: "canonical spec" },
+      { name: "brand.md", description: "human-readable guide" },
+      ...assetPaths.map((p) => ({
+        name: p.replace(root + "/", ""),
+        description: describeAsset(p),
+      })),
+    ]);
+    console.log();
+    printNextSteps(allWritten);
+    console.log();
   } else {
     const { accepted, skipped } = await reviewFiles(diffs);
 
     if (accepted.length === 0) {
-      console.log("No files written.");
+      console.log("  No files written.");
       return;
     }
 
     // Write accepted files
+    const writtenPaths: string[] = [];
     for (const diff of accepted) {
       if (diff.path === "brand.json") {
         await writeBrandJson(root, brandJson);
@@ -462,27 +529,40 @@ export async function runGenerate(opts: GenerateOptions) {
         const { join } = await import("node:path");
         await writeFile(join(root, "README.md"), readmeContent, "utf-8");
       }
+      console.log(`  ${ui.success("✓")} wrote ${diff.path}`);
+      writtenPaths.push(diff.path);
     }
 
-    // Always write assets if any file was accepted
+    // Write assets if any file was accepted
     if (accepted.length > 0) {
       const assetPaths = await writeAssets(root, brandJson, logoResult, ogImageBuf);
-      printFileList(
-        assetPaths.map((p) => ({
+      for (const p of assetPaths) {
+        const rel = p.replace(root + "/", "");
+        console.log(`  ${ui.success("✓")} wrote ${rel}`);
+        writtenPaths.push(rel);
+      }
+      console.log();
+
+      printStageHeader("Done");
+      printSuccess(`${accepted.length} files written, ${skipped.length} skipped.`);
+      console.log();
+      printProjectedScore(total, projected);
+      console.log();
+      printFileList([
+        ...accepted.map((d) => ({
+          name: d.path,
+          description: d.status === "create" ? "new" : "updated",
+        })),
+        ...assetPaths.map((p) => ({
           name: p.replace(root + "/", ""),
           description: describeAsset(p),
-        }))
-      );
+        })),
+      ]);
+      console.log();
+      printNextSteps(writtenPaths);
+      console.log();
     }
-
-    printSuccess(
-      `${accepted.length} files written, ${skipped.length} skipped.`
-    );
   }
-
-  console.log();
-  printSuccess(`Brand score: ${total} → ${projected}/100`);
-  console.log();
 }
 
 async function writeAllFiles(
@@ -507,7 +587,6 @@ async function writeAllFiles(
     const { join } = await import("node:path");
     await writeFile(join(root, "README.md"), readmeContent, "utf-8");
   }
-  await writeAssets(root, brandJson, logoResult, ogImageBuf);
 }
 
 async function collectBrief(): Promise<{
@@ -523,15 +602,14 @@ async function collectBrief(): Promise<{
   const ask = (q: string): Promise<string> =>
     new Promise((resolve) => rl.question(q, resolve));
 
-  console.log("Quick brief (press Enter to skip any question):");
+  console.log(ui.dim("  Answer to sharpen results. Press Enter to skip. Ctrl+C to quit."));
   console.log();
 
-  const audience = await ask("  Who is this for? ");
-  const problem = await ask("  What problem does it solve? ");
-  const differentiator = await ask("  What makes it different? ");
+  const audience = await ask(`  ${ui.muted("→")} Who is this for? `);
+  const problem = await ask(`  ${ui.muted("→")} What problem does it solve? `);
+  const differentiator = await ask(`  ${ui.muted("→")} What makes it different? `);
 
   rl.close();
-  console.log();
 
   return {
     audience: audience.trim() || undefined,
@@ -549,11 +627,19 @@ function detectStack(repo: RepoInfo): string {
   return "Unknown";
 }
 
+function printNextSteps(writtenFiles: string[]) {
+  const files = writtenFiles.join(" ");
+  console.log(`  ${ui.muted("Next steps:")}`);
+  console.log();
+  console.log(`    ${ui.dim("git add")} ${files}`);
+  console.log(`    ${ui.dim('git commit -m "Add brand identity"')}`);
+}
+
 function describeAsset(path: string): string {
   if (path.endsWith("brand-tokens.css")) return "CSS custom properties";
   if (path.endsWith("tailwind-brand.js")) return "Tailwind config";
-  if (path.endsWith("logo-light.svg")) return "Logo (light mode)";
-  if (path.endsWith("logo-dark.svg")) return "Logo (dark mode)";
+  if (path.endsWith("logo-light.svg")) return "logo (light)";
+  if (path.endsWith("logo-dark.svg")) return "logo (dark)";
   if (path.endsWith("og-image.png")) return "OG image (1200x630)";
   return "";
 }
